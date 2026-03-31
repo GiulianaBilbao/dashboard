@@ -115,14 +115,29 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 /* DRAWER */
 .d-overlay{position:fixed;inset:0;background:rgba(58,53,48,0.15);backdrop-filter:blur(2px);z-index:100;opacity:0;pointer-events:none;transition:opacity .3s;}
 .d-overlay.open{opacity:1;pointer-events:all;}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(500px,94vw);background:var(--bg);z-index:101;transform:translateX(100%);transition:transform .32s cubic-bezier(0.32,0.72,0,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(58,53,48,0.1);border-radius:20px 0 0 20px;overflow:hidden;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(900px,78vw);background:var(--bg);z-index:101;transform:translateX(100%);transition:transform .32s cubic-bezier(0.32,0.72,0,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(58,53,48,0.1);border-radius:20px 0 0 20px;overflow:hidden;}
 .drawer.open{transform:translateX(0);}
 .d-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 14px;flex-shrink:0;border-bottom:1px solid var(--shadow-dark);}
 .d-eyebrow{font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:2px;}
 .d-title{font-size:19px;font-weight:900;color:var(--text);line-height:1.1;}
 .d-close{width:34px;height:34px;border-radius:11px;background:var(--bg);box-shadow:var(--no-sm);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-mid);flex-shrink:0;transition:box-shadow .15s;font-family:'Nunito',sans-serif;}
 .d-close:hover{box-shadow:var(--ni-sm);}
-.d-body{flex:1;overflow-y:auto;padding:18px 22px 40px;scrollbar-width:thin;scrollbar-color:var(--shadow-dark) transparent;}
+.d-body{flex:1;overflow-y:auto;padding:22px 28px 40px;scrollbar-width:thin;scrollbar-color:var(--shadow-dark) transparent;}
+.d-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+.d-col{}
+@media(max-width:700px){.d-cols{grid-template-columns:1fr;}}
+/* Workout progression chart */
+.w-chart{background:var(--bg);border-radius:14px;padding:14px;box-shadow:var(--no-sm);margin-bottom:8px;}
+.w-chart-title{font-size:11px;font-weight:800;color:var(--text);margin-bottom:10px;}
+.w-chart-bars{display:flex;align-items:flex-end;gap:4px;height:80px;}
+.w-bar-wrap{display:flex;flex-direction:column;align-items:center;flex:1;height:100%;}
+.w-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .3s ease;}
+.w-bar-lbl{font-size:7px;font-weight:700;color:var(--text-dim);margin-top:3px;text-align:center;}
+.w-bar-val{font-size:7px;font-weight:800;color:var(--text-mid);margin-bottom:2px;}
+.w-pb-badge{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:800;color:var(--gold);background:var(--gold-pale);padding:2px 7px;border-radius:10px;margin-left:6px;}
+/* Progress habit grid improvements */
+.h-all-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:600px){.h-all-grid{grid-template-columns:1fr;}}
 .d-body::-webkit-scrollbar{width:3px;}
 .d-body::-webkit-scrollbar-thumb{background:var(--shadow-dark);border-radius:2px;}
 
@@ -252,7 +267,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     <div class="hbit" id="hab-skincare" onclick="togHabit('skincare',this)"><div class="hcheck"></div><div class="hlbl">🧴 Skincare routine</div><div class="hstreak" id="streak-skincare"></div></div>
     <div class="hbit" id="hab-redlight" onclick="togHabit('redlight',this)"><div class="hcheck"></div><div class="hlbl">🔴 Red light mask</div><div class="hstreak" id="streak-redlight"></div></div>
     <div class="hbit" id="hab-gym" onclick="togHabit('gym',this)"><div class="hcheck"></div><div class="hlbl">💪 Gym / workout</div><div class="hstreak" id="streak-gym"></div></div>
-    <div class="hbit" id="hab-bupropion" onclick="togHabit('bupropion',this)"><div class="hcheck"></div><div class="hlbl">💊 Bupropion</div><div class="hstreak" id="streak-bupropion"></div></div>
+    <div class="hbit" id="hab-bupropion" onclick="togHabit('bupropion',this)"><div class="hcheck"></div><div class="hlbl">💊 Medication</div><div class="hstreak" id="streak-bupropion"></div></div>
     <div class="hbit" id="hab-water" onclick="togHabit('water',this)"><div class="hcheck"></div><div class="hlbl">💧 2–3L water</div><div class="hstreak" id="streak-water"></div></div>
     <div class="hbit" id="hab-sunlight" onclick="togHabit('sunlight',this)"><div class="hcheck"></div><div class="hlbl">☀️ Morning sunlight</div><div class="hstreak" id="streak-sunlight"></div></div>
     <div class="hbit" id="hab-mika" onclick="togHabit('mika',this)"><div class="hcheck"></div><div class="hlbl">🐱 Feed Mika</div><div class="hstreak" id="streak-mika"></div></div>
@@ -662,6 +677,10 @@ function openDrawer(id){
   document.getElementById('d-overlay').classList.add('open');
   document.getElementById('d-body').scrollTop=0;
   if(id==='progress') renderProgress();
+  if(id==='body'){
+    // Load workout progression after drawer opens
+    setTimeout(renderWorkoutProgress, 100);
+  }
 }
 
 // ── PROGRESS DRAWER ──
@@ -673,12 +692,96 @@ const HABIT_META = {
   water:     {label:'💧 2–3L water',       color:'var(--gold)'},
 };
 
-function renderProgress(){
-  const container = document.getElementById('progress-content');
-  if(!container) return;
+async function renderWorkoutProgress(){
+  const el = document.getElementById('workout-progress-content');
+  const loading = document.getElementById('workout-progress-loading');
+  if(!el) return;
+
+  // Fetch last 8 weeks of exercise_sets from Supabase
+  const rows = await sb.get('exercise_sets',
+    '?order=log_date.desc&limit=200');
+
+  if(!rows || rows.length === 0){
+    loading.innerHTML = '<div style="text-align:center;padding:16px;font-size:11px;color:var(--text-dim);font-weight:600;">No workout data yet — start logging to see your progression!</div>';
+    return;
+  }
+
+  loading.style.display = 'none';
+  el.style.display = 'block';
+
+  // Group by exercise
+  const byExercise = {};
+  rows.forEach(r => {
+    if(!r.exercise_name || !r.weight_lbs) return;
+    if(!byExercise[r.exercise_name]) byExercise[r.exercise_name] = [];
+    byExercise[r.exercise_name].push(r);
+  });
+
+  const exercises = Object.keys(byExercise);
+  const colors = ['var(--coral)','var(--sage)','var(--blue)','var(--purple)','var(--gold)','var(--rose)'];
+
+  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+
+  exercises.forEach((ex, i) => {
+    const data = byExercise[ex].reverse(); // chronological
+    const weights = data.map(d => d.weight_lbs);
+    const maxW = Math.max(...weights);
+    const minW = Math.min(...weights);
+    const latest = weights[weights.length-1];
+    const isPB = data[data.length-1]?.is_personal_best;
+    const color = colors[i % colors.length];
+    const displayName = ex.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase());
+
+    html += '<div class="w-chart">';
+    html += '<div class="w-chart-title">' + displayName;
+    if(isPB) html += '<span class="w-pb-badge">🏆 PB</span>';
+    html += '<span style="float:right;font-size:10px;font-weight:900;color:'+color+'">'+latest+'lbs</span></div>';
+    html += '<div class="w-chart-bars">';
+
+    // Show up to last 8 sessions
+    const recent = data.slice(-8);
+    recent.forEach(d => {
+      const pct = maxW > minW ? ((d.weight_lbs - minW)/(maxW - minW)*75 + 10) : 50;
+      const date = new Date(d.log_date).toLocaleDateString('en-US',{month:'numeric',day:'numeric'});
+      html += '<div class="w-bar-wrap">';
+      html += '<div class="w-bar-val">'+d.weight_lbs+'</div>';
+      html += '<div class="w-bar" style="height:'+pct+'%;background:'+color+';opacity:'+(d.is_personal_best?1:0.6)+'"></div>';
+      html += '<div class="w-bar-lbl">'+date+'</div>';
+      html += '</div>';
+    });
+
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+
+  if(exercises.length === 0){
+    html = '<div style="padding:12px;font-size:11px;color:var(--text-dim);font-weight:600;">Log your first workout to see progression here.</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+async function renderProgress(){
+  const streaksEl = document.getElementById('progress-streaks');
+  const calEl = document.getElementById('progress-calendar');
+  if(!streaksEl) return;
 
   const today = new Date();
   const todayKey2 = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+  // Fetch ALL habit definitions from Supabase
+  let allDefs = [];
+  try {
+    allDefs = await sb.get('habit_definitions','?active=eq.true&order=sort_order') || [];
+  } catch(e){ allDefs = []; }
+
+  // Fetch this month's habit completions from Supabase
+  const monthStart = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-01';
+  let sbHabits = [];
+  try {
+    sbHabits = await sb.get('habits','?log_date=gte.'+monthStart+'&completed=eq.true') || [];
+  } catch(e){ sbHabits = []; }
 
   // Build month grid for current month
   const year = today.getFullYear();
@@ -687,10 +790,15 @@ function renderProgress(){
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const firstDow = new Date(year, month, 1).getDay(); // 0=Sun
 
-  let html = '<div class="d-sec"><div class="d-sec-lbl">Streaks — Current</div><div style="display:flex;flex-direction:column;gap:7px;">';
+  let streakHtml = '<div style="display:flex;flex-direction:column;gap:7px;">';
 
-  TRACKED.forEach(id => {
-    const meta = HABIT_META[id];
+  // Use allDefs from Supabase if available, else fall back to TRACKED
+  const habitList = allDefs.length > 0 ? allDefs.map(d => d.habit_key) : TRACKED;
+  const habitLabels = {};
+  allDefs.forEach(d => { habitLabels[d.habit_key] = (d.emoji||'') + ' ' + d.label; });
+
+  habitList.forEach(id => {
+    const meta = HABIT_META[id] || {label: habitLabels[id] || id, color:'var(--gold)'};
     const data = getHabitData(id);
     const streak = getStreak(id) + (data[todayKey2] ? 1 : 0);
     const doneToday = data[todayKey2] ? true : false;
@@ -702,13 +810,13 @@ function renderProgress(){
       if(data[k]) monthTotal++;
     }
 
-    html += '<div style="background:var(--bg);border-radius:13px;padding:11px 13px;box-shadow:var(--no-sm);">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
-    html += '<div style="font-size:12px;font-weight:800;color:var(--text);">'+meta.label+'</div>';
-    html += '<div style="font-size:14px;font-weight:900;color:'+meta.color+';">'+(streak>0?'🔥'+streak+' day'+(streak===1?'':'s'):'—')+'</div>';
-    html += '</div>';
+    streakHtml += '<div style="background:var(--bg);border-radius:13px;padding:11px 13px;box-shadow:var(--no-sm);">';
+    streakHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+    streakHtml += '<div style="font-size:12px;font-weight:800;color:var(--text);">'+meta.label+'</div>';
+    streakHtml += '<div style="font-size:14px;font-weight:900;color:'+meta.color+';">'+(streak>0?'🔥'+streak+' day'+(streak===1?'':'s'):'—')+'</div>';
+    streakHtml += '</div>';
     // Mini bar showing this month
-    html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
+    streakHtml += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
     for(let d2=1; d2<=daysInMonth; d2++){
       const k = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
       const done = data[k] ? true : false;
@@ -719,33 +827,33 @@ function renderProgress(){
       else if(isFuture) { bg='transparent'; border='1px solid var(--shadow-dark)'; }
       else { bg='var(--shadow-dark)'; border='none'; }
       const ring = isToday ? 'outline:2px solid '+meta.color+';outline-offset:1px;' : '';
-      html += '<div style="width:14px;height:14px;border-radius:4px;background:'+bg+';border:'+border+';'+ring+'" title="'+k+'"></div>';
+      streakHtml += '<div style="width:14px;height:14px;border-radius:4px;background:'+bg+';border:'+border+';'+ring+'" title="'+k+'"></div>';
     }
-    html += '</div>';
-    html += '<div style="font-size:9px;font-weight:700;color:var(--text-dim);margin-top:5px;">'+monthTotal+' / '+today.getDate()+' days this month</div>';
-    html += '</div>';
+    streakHtml += '</div>';
+    streakHtml += '<div style="font-size:9px;font-weight:700;color:var(--text-dim);margin-top:5px;">'+monthTotal+' / '+today.getDate()+' days this month</div>';
+    streakHtml += '</div>';
   });
 
-  html += '</div></div>';
+  streakHtml += '</div>';
 
-  // Full calendar grid
-  html += '<div class="d-sec"><div class="d-sec-lbl">'+monthName+' — All Habits</div>';
-  html += '<div style="background:var(--bg);border-radius:14px;padding:14px;box-shadow:var(--no-sm);">';
+  // Build calendar grid
+  let calHtml = '<div class="d-sec-lbl" style="font-size:9px;font-weight:800;letter-spacing:0.17em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--shadow-dark);">'+monthName+' — Calendar</div>';
+  calHtml += '<div style="background:var(--bg);border-radius:14px;padding:14px;box-shadow:var(--no-sm);">';
 
   // Day headers
   const dayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">';
+  calHtml += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">';
   dayLabels.forEach(d2 => {
-    html += '<div style="text-align:center;font-size:8px;font-weight:800;color:var(--text-dim);letter-spacing:0.06em;">'+d2+'</div>';
+    calHtml += '<div style="text-align:center;font-size:8px;font-weight:800;color:var(--text-dim);letter-spacing:0.06em;">'+d2+'</div>';
   });
-  html += '</div>';
+  calHtml += '</div>';
 
   // Calendar grid
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">';
+  calHtml += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">';
 
   // Empty cells before month starts
   for(let i=0;i<firstDow;i++){
-    html += '<div></div>';
+    calHtml += '<div></div>';
   }
 
   for(let d2=1;d2<=daysInMonth;d2++){
@@ -770,20 +878,23 @@ function renderProgress(){
 
     const ring = isToday ? 'outline:2px solid var(--gold);outline-offset:1px;' : '';
     const border = isFuture ? 'border:1px solid var(--shadow-dark);' : '';
-    html += '<div style="aspect-ratio:1;border-radius:5px;background:'+bg+';'+ring+border+'display:flex;align-items:center;justify-content:center;" title="'+k+': '+count+'/'+TRACKED.length+' habits">';
+    calHtml += '<div style="aspect-ratio:1;border-radius:5px;background:'+bg+';'+ring+border+'display:flex;align-items:center;justify-content:center;" title="'+k+': '+count+'/'+TRACKED.length+' habits">';
     if(isToday) html += '<span style="font-size:7px;font-weight:900;color:'+(count>0?'white':'var(--gold)')+'">'+d2+'</span>';
-    html += '</div>';
+    calHtml += '</div>';
   }
-  html += '</div>';
-  html += '<div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">';
-  html += '<div style="font-size:9px;font-weight:700;color:var(--text-dim);">Legend:</div>';
-  html += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:var(--gold)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">All done</span></div>';
-  html += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(196,145,58,0.5)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">Partial</span></div>';
-  html += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:var(--shadow-dark)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">Missed</span></div>';
-  html += '</div>';
-  html += '</div></div>';
+  calHtml += '</div>';
+  calHtml += '<div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">';
+  calHtml += '<div style="font-size:9px;font-weight:700;color:var(--text-dim);">Legend:</div>';
+  calHtml += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:var(--gold)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">All done</span></div>';
+  calHtml += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(196,145,58,0.5)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">Partial</span></div>';
+  calHtml += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:var(--shadow-dark)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">Missed</span></div>';
+  calHtml += '</div>';
+  calHtml += '</div></div>';
 
-  container.innerHTML = html;
+  // Write streaks to left column
+  if(streaksEl) streaksEl.innerHTML = '<div class="d-sec-lbl" style="font-size:9px;font-weight:800;letter-spacing:0.17em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--shadow-dark);">Streaks — All Habits</div>' + streakHtml;
+  // Write calendar to right column
+  if(calEl) calEl.innerHTML = calHtml;
 }
 
 const DRAWERS = {
@@ -1049,7 +1160,15 @@ html:`
 ,progress:{
 eye:'Habit Progress',
 title:'Streaks & Monthly View',
-html:`<div id="progress-content"><div style="text-align:center;padding:40px 0;font-size:12px;color:var(--text-dim);font-weight:600;">Loading your data...</div></div>`,
+html:`
+<div class="d-cols">
+  <div class="d-col">
+    <div id="progress-streaks"><div style="text-align:center;padding:30px 0;font-size:11px;color:var(--text-dim);font-weight:600;">Loading streaks...</div></div>
+  </div>
+  <div class="d-col">
+    <div id="progress-calendar"><div style="text-align:center;padding:30px 0;font-size:11px;color:var(--text-dim);font-weight:600;">Loading calendar...</div></div>
+  </div>
+</div>`,
 }
 }; // end DRAWERS
 </script>
