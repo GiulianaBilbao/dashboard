@@ -685,7 +685,10 @@ async function renderHabitDrawerToday(){
   const done = await sb.get('habits','?log_date=eq.'+today+'&completed=eq.true') || [];
   const doneKeys = new Set(done.map(d=>d.habit_key));
 
-  if(loading) loading.style.display='none';
+  // Re-query fresh after awaits complete
+  const freshLoading = document.getElementById('habit-today-loading');
+  const freshList = document.getElementById('habit-today-list');
+  if(freshLoading) freshLoading.style.display='none';
 
   let html = '';
   defs.forEach(def => {
@@ -767,7 +770,9 @@ async function renderWeekGrid(){
   const done = {};
   rows.forEach(r=>{ done[r.log_date+'_'+r.habit_key]=true; });
 
-  if(loading) loading.style.display='none';
+  const freshWeekLoading = document.getElementById('habit-week-loading');
+  const freshWeekGrid = document.getElementById('habit-week-grid');
+  if(freshWeekLoading) freshWeekLoading.style.display='none';
 
   const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
@@ -800,7 +805,7 @@ async function renderWeekGrid(){
     html += '</div>';
   });
 
-  grid.innerHTML = html;
+  if(freshWeekGrid) freshWeekGrid.innerHTML = html;
 }
 
 async function toggleWeekCell(key, dateStr, el){
@@ -1038,7 +1043,7 @@ async function renderProgress(){
     const ring = isToday ? 'outline:2px solid var(--gold);outline-offset:1px;' : '';
     const border = isFuture ? 'border:1px solid var(--shadow-dark);' : '';
     calHtml += '<div style="aspect-ratio:1;border-radius:5px;background:'+bg+';'+ring+border+'display:flex;align-items:center;justify-content:center;" title="'+k+': '+count+'/'+TRACKED.length+' habits">';
-    if(isToday) html += '<span style="font-size:7px;font-weight:900;color:'+(count>0?'white':'var(--gold)')+'">'+d2+'</span>';
+    if(isToday) calHtml += '<span style="font-size:7px;font-weight:900;color:'+(count>0?'white':'var(--gold)')+'">'+d2+'</span>';
     calHtml += '</div>';
   }
   calHtml += '</div>';
@@ -1050,10 +1055,11 @@ async function renderProgress(){
   calHtml += '</div>';
   calHtml += '</div></div>';
 
-  // Write streaks to left column
-  if(streaksEl) streaksEl.innerHTML = '<div class="d-sec-lbl" style="font-size:9px;font-weight:800;letter-spacing:0.17em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--shadow-dark);">Streaks — All Habits</div>' + streakHtml;
-  // Write calendar to right column
-  if(calEl) calEl.innerHTML = calHtml;
+  // Re-query elements fresh after all async work (drawer may have re-rendered)
+  const freshStreaksEl = document.getElementById('progress-streaks');
+  const freshCalEl = document.getElementById('progress-calendar');
+  if(freshStreaksEl) freshStreaksEl.innerHTML = '<div class="d-sec-lbl" style="font-size:9px;font-weight:800;letter-spacing:0.17em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--shadow-dark);">Streaks — All Habits</div>' + streakHtml;
+  if(freshCalEl) freshCalEl.innerHTML = calHtml;
 }
 
 const DRAWERS = {
