@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giuliana — Daily Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#EDEAE4;--shadow-dark:#C8C3BB;--shadow-light:#FFFFFF;
+  --gold:#C4913A;--gold-light:#E8C97A;--gold-pale:rgba(196,145,58,0.13);
+  --sage:#7A9172;--sage-pale:rgba(122,145,114,0.13);
+  --coral:#C4775C;--coral-pale:rgba(196,119,92,0.13);
+  --blue:#6A8FAA;--blue-pale:rgba(106,143,170,0.13);
+  --purple:#9B7FC4;--purple-pale:rgba(155,127,196,0.13);
+  --rose:#C48A8A;--rose-pale:rgba(196,138,138,0.13);
+  --green:#7AAA82;--green-pale:rgba(122,170,130,0.13);
+  --text:#3A3530;--text-mid:#7A7068;--text-dim:#A89F94;
+  --no: 6px 6px 14px var(--shadow-dark),-4px -4px 10px var(--shadow-light);
+  --no-sm: 3px 3px 8px var(--shadow-dark),-2px -2px 6px var(--shadow-light);
+  --ni: inset 3px 3px 8px var(--shadow-dark),inset -3px -3px 8px var(--shadow-light);
+  --ni-sm: inset 2px 2px 5px var(--shadow-dark),inset -2px -2px 5px var(--shadow-light);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* TOP BAR */
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;padding:28px 36px 16px;}
+.g-sub{font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:3px;}
+.g-main{font-size:26px;font-weight:900;color:var(--text);line-height:1.1;}
+.g-date{font-size:12px;font-weight:600;color:var(--text-mid);margin-top:3px;}
+.clock{text-align:right;}
+.clock-t{font-size:36px;font-weight:900;color:var(--text);letter-spacing:-0.02em;line-height:1;font-variant-numeric:tabular-nums;}
+.clock-ap{font-size:12px;font-weight:700;color:var(--text-mid);margin-left:3px;}
+.clock-d{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+
+/* YEAR BAR */
+.ybar{margin:0 36px 22px;padding:12px 18px;border-radius:14px;box-shadow:var(--ni-sm);}
+.ybar-top{display:flex;justify-content:space-between;margin-bottom:7px;}
+.ybar-lbl{font-size:10px;font-weight:800;letter-spacing:0.09em;text-transform:uppercase;color:var(--text-dim);}
+.ybar-pct{font-size:10px;font-weight:900;color:var(--gold);}
+.ybar-track{height:5px;border-radius:8px;background:var(--bg);box-shadow:var(--ni-sm);overflow:visible;position:relative;}
+.ybar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gold),var(--gold-light));position:relative;transition:width 1s ease;}
+.ybar-fill::after{content:'';position:absolute;right:-1px;top:50%;transform:translateY(-50%);width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px rgba(196,145,58,0.5);}
+
+/* MAIN GRID */
+.main{display:grid;grid-template-columns:1fr 300px;gap:0;padding:0 36px;height:calc(100vh - 166px);min-height:480px;}
+
+/* TIMELINE */
+.tl-wrap{padding-right:24px;overflow-y:auto;padding-bottom:60px;scrollbar-width:thin;scrollbar-color:var(--shadow-dark) transparent;}
+.tl-wrap::-webkit-scrollbar{width:3px;}
+.tl-wrap::-webkit-scrollbar-thumb{background:var(--shadow-dark);border-radius:2px;}
+.tl-hdr{font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px;padding-left:50px;}
+
+/* SCHEDULE TOGGLE */
+.sched-toggle{display:flex;gap:6px;margin-bottom:14px;padding-left:50px;}
+.stog-btn{background:var(--bg);border:none;cursor:pointer;padding:6px 16px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);box-shadow:var(--no-sm);transition:box-shadow .15s,color .15s;}
+.stog-btn.active{box-shadow:var(--ni-sm);color:var(--gold);}
+
+/* WEEKLY VIEW */
+.week-view{display:none;padding-bottom:60px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--shadow-dark) transparent;}
+.week-view::-webkit-scrollbar{width:3px;}
+.week-view::-webkit-scrollbar-thumb{background:var(--shadow-dark);border-radius:2px;}
+.week-view.visible{display:block;}
+.tl-wrap.hidden{display:none;}
+.wk-day{margin-bottom:18px;}
+.wk-day-hdr{font-size:11px;font-weight:900;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.wk-day-hdr span{font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.09em;}
+.wk-day-hdr .today-badge{font-size:8px;font-weight:800;background:var(--gold-pale);color:var(--gold);padding:2px 7px;border-radius:10px;letter-spacing:0.06em;text-transform:uppercase;}
+.wk-ev{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:var(--bg);box-shadow:var(--no-sm);border-radius:10px;margin-bottom:5px;border-left:2px solid;}
+.wk-ev-t{font-size:11px;font-weight:700;color:var(--text);line-height:1.3;}
+.wk-ev-s{font-size:9px;font-weight:600;color:var(--text-dim);margin-top:1px;}
+.tl-row{display:flex;align-items:flex-start;min-height:50px;}
+.tl-time{width:44px;flex-shrink:0;font-size:10px;font-weight:700;color:var(--text-dim);padding-top:13px;text-align:right;padding-right:8px;font-variant-numeric:tabular-nums;}
+.tl-spine{width:1px;background:var(--shadow-dark);flex-shrink:0;align-self:stretch;margin:0 14px;position:relative;}
+.tl-dot{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:var(--shadow-dark);}
+.tl-dot.now{background:var(--gold);box-shadow:0 0 8px rgba(196,145,58,0.6);width:9px;height:9px;top:11px;}
+.tl-content{flex:1;padding:6px 0;}
+.tl-empty{height:50px;}
+.tl-ev{border-radius:12px;padding:9px 12px;margin-bottom:5px;box-shadow:var(--no-sm);position:relative;overflow:hidden;background:var(--bg);}
+.tl-ev::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.tl-ev-t{font-size:12px;font-weight:800;color:var(--text);margin-bottom:1px;line-height:1.3;padding-left:8px;}
+.tl-ev-s{font-size:9px;font-weight:600;color:var(--text-dim);padding-left:8px;}
+
+/* SIDEBAR */
+.sidebar{overflow-y:auto;padding-bottom:60px;scrollbar-width:none;}
+.sidebar::-webkit-scrollbar{display:none;}
+.sb-hdr{font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;}
+
+/* GOAL PILLS */
+.gpills{display:flex;gap:7px;margin-bottom:18px;}
+.gpill{flex:1;padding:9px 10px;border-radius:14px;box-shadow:var(--no-sm);text-align:center;}
+.gpill-v{font-size:15px;font-weight:900;line-height:1;margin-bottom:2px;}
+.gpill-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);}
+
+/* PLAN TILES */
+.ptile{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;box-shadow:var(--no-sm);margin-bottom:8px;cursor:pointer;transition:box-shadow .2s,transform .15s;border:none;background:var(--bg);width:100%;text-align:left;}
+.ptile:hover{box-shadow:var(--no);transform:translateY(-1px);}
+.ptile:active{box-shadow:var(--ni-sm);transform:translateY(0);}
+.picon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;box-shadow:var(--ni-sm);}
+.plabel{flex:1;}
+.pname{font-size:12px;font-weight:800;color:var(--text);line-height:1.2;}
+.pdesc{font-size:9px;font-weight:600;color:var(--text-dim);margin-top:1px;}
+.parrow{font-size:16px;color:var(--text-dim);flex-shrink:0;font-weight:300;}
+
+/* HABITS */
+.hbit{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:13px;box-shadow:var(--no-sm);margin-bottom:7px;cursor:pointer;transition:box-shadow .15s;}
+.hbit.done{box-shadow:var(--ni-sm);}
+.hcheck{width:20px;height:20px;border-radius:7px;box-shadow:var(--ni-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:background .15s;}
+.hbit.done .hcheck{background:var(--gold);box-shadow:2px 2px 4px rgba(196,145,58,0.3),-1px -1px 3px var(--shadow-light);color:#fff;}
+.hlbl{font-size:11px;font-weight:700;color:var(--text);}
+.hbit.done .hlbl{color:var(--text-dim);text-decoration:line-through;}
+.hstreak{margin-left:auto;font-size:9px;font-weight:800;color:var(--gold);flex-shrink:0;padding-left:6px;min-width:28px;text-align:right;}
+
+/* DRAWER */
+.d-overlay{position:fixed;inset:0;background:rgba(58,53,48,0.15);backdrop-filter:blur(2px);z-index:100;opacity:0;pointer-events:none;transition:opacity .3s;}
+.d-overlay.open{opacity:1;pointer-events:all;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(500px,94vw);background:var(--bg);z-index:101;transform:translateX(100%);transition:transform .32s cubic-bezier(0.32,0.72,0,1);display:flex;flex-direction:column;box-shadow:-6px 0 28px rgba(58,53,48,0.1);border-radius:20px 0 0 20px;overflow:hidden;}
+.drawer.open{transform:translateX(0);}
+.d-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 14px;flex-shrink:0;border-bottom:1px solid var(--shadow-dark);}
+.d-eyebrow{font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:2px;}
+.d-title{font-size:19px;font-weight:900;color:var(--text);line-height:1.1;}
+.d-close{width:34px;height:34px;border-radius:11px;background:var(--bg);box-shadow:var(--no-sm);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-mid);flex-shrink:0;transition:box-shadow .15s;font-family:'Nunito',sans-serif;}
+.d-close:hover{box-shadow:var(--ni-sm);}
+.d-body{flex:1;overflow-y:auto;padding:18px 22px 40px;scrollbar-width:thin;scrollbar-color:var(--shadow-dark) transparent;}
+.d-body::-webkit-scrollbar{width:3px;}
+.d-body::-webkit-scrollbar-thumb{background:var(--shadow-dark);border-radius:2px;}
+
+/* DRAWER COMPONENTS */
+.d-sec{margin-bottom:22px;}
+.d-sec-lbl{font-size:9px;font-weight:800;letter-spacing:0.17em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--shadow-dark);}
+.d-card{background:var(--bg);border-radius:14px;padding:13px 15px;margin-bottom:7px;box-shadow:var(--no-sm);}
+.d-ct{font-size:13px;font-weight:800;color:var(--text);margin-bottom:5px;line-height:1.3;}
+.d-cb{font-size:11px;font-weight:500;color:var(--text-mid);line-height:1.75;}
+.d-cb strong{color:var(--text);font-weight:800;}
+.d-na{margin-top:8px;padding:7px 10px;background:var(--bg);box-shadow:var(--ni-sm);border-radius:9px;font-size:10px;font-weight:700;color:var(--text-mid);line-height:1.5;}
+.d-na strong{color:var(--gold);font-weight:800;}
+.d-callout{padding:11px 13px;border-radius:13px;box-shadow:var(--ni-sm);font-size:11px;font-weight:600;color:var(--text-mid);line-height:1.75;margin-bottom:14px;border-left:3px solid var(--gold);}
+.d-callout strong{color:var(--text);font-weight:800;}
+.d-callout.coral{border-left-color:var(--coral);}
+.d2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.d-status{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 7px;border-radius:20px;margin-bottom:5px;}
+.d-status::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;}
+.su{background:rgba(196,119,92,0.12);color:var(--coral);}
+.sa{background:rgba(122,145,114,0.12);color:var(--sage);}
+.sp{background:rgba(196,145,58,0.12);color:var(--gold);}
+.sd{background:rgba(106,143,170,0.12);color:var(--blue);}
+
+/* PHASE ROWS */
+.d-phase{display:flex;gap:11px;align-items:flex-start;padding:11px 13px;background:var(--bg);box-shadow:var(--no-sm);border-radius:13px;margin-bottom:7px;border-left:3px solid;}
+.d-ph-n{font-size:22px;font-weight:900;line-height:1;flex-shrink:0;padding-top:1px;}
+.d-ph-period{font-size:9px;font-weight:800;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:2px;}
+.d-ph-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.d-ph-desc{font-size:10px;font-weight:500;color:var(--text-mid);line-height:1.6;}
+
+/* PROGRESS */
+.d-prog{margin-bottom:8px;}
+.d-prog-row{display:flex;justify-content:space-between;margin-bottom:3px;}
+.d-prog-lbl{font-size:10px;font-weight:700;color:var(--text-mid);}
+.d-prog-val{font-size:9px;font-weight:700;color:var(--text-dim);}
+.d-prog-track{height:5px;background:var(--bg);box-shadow:var(--ni-sm);border-radius:4px;overflow:hidden;}
+.d-prog-fill{height:100%;border-radius:4px;}
+
+/* STEP ROWS */
+.d-step{display:flex;gap:11px;align-items:flex-start;padding:10px 12px;background:var(--bg);box-shadow:var(--no-sm);border-radius:12px;margin-bottom:6px;}
+.d-step-tag{font-size:10px;font-weight:900;color:var(--gold);flex-shrink:0;min-width:24px;padding-top:2px;}
+.d-step-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:2px;}
+.d-step-desc{font-size:10px;font-weight:500;color:var(--text-mid);line-height:1.6;}
+.d-step-desc strong{color:var(--text);font-weight:800;}
+
+/* SKIN PHASE */
+.d-sphase{background:var(--bg);border-radius:12px;padding:11px 13px;margin-bottom:6px;box-shadow:var(--no-sm);border-left:3px solid;}
+.d-sp-period{font-size:9px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px;}
+.d-sp-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.d-sp-desc{font-size:10px;font-weight:500;color:var(--text-mid);line-height:1.6;}
+
+/* HABIT STATUS ROWS */
+.d-hrow{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);box-shadow:var(--no-sm);border-radius:12px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--text);}
+.d-hdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* PAPER CARD */
+.d-paper{background:var(--bg);border-radius:14px;padding:13px 15px;margin-bottom:8px;box-shadow:var(--no-sm);border-top:3px solid;}
+.d-paper-authors{font-size:9px;font-weight:700;color:var(--text-dim);letter-spacing:0.06em;margin-bottom:4px;}
+.d-paper-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;line-height:1.4;}
+.d-paper-journal{font-size:10px;color:var(--text-dim);font-style:italic;margin-bottom:8px;}
+.d-tag{display:inline-block;font-size:7px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;padding:2px 6px;border-radius:8px;margin-right:3px;margin-top:2px;}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.topbar{animation:fadeUp .35s ease both;}
+.ybar{animation:fadeUp .35s ease .08s both;}
+.main{animation:fadeUp .35s ease .15s both;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="g-sub" id="g-sub">Good morning</div>
+    <div class="g-main">Hey, Giuliana 👋</div>
+    <div class="g-date" id="g-date">Loading...</div>
+  </div>
+  <div class="clock">
+    <div class="clock-t" id="ct">--:--<span class="clock-ap" id="cap">AM</span></div>
+    <div class="clock-d" id="cd">Wednesday</div>
+  </div>
+</div>
+
+<div class="ybar">
+  <div class="ybar-top">
+    <span class="ybar-lbl">2026 — year progress</span>
+    <span class="ybar-pct" id="ypct">--</span>
+  </div>
+  <div class="ybar-track"><div class="ybar-fill" id="yfill" style="width:0%"></div></div>
+</div>
+
+<div class="main">
+  <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;padding-right:24px;">
+    <div class="sched-toggle">
+      <button class="stog-btn active" id="btn-daily" onclick="showView('daily')">Daily</button>
+      <button class="stog-btn" id="btn-weekly" onclick="showView('weekly')">Weekly</button>
+    </div>
+    <div class="tl-wrap" id="tl-wrap" style="padding-right:0;flex:1;">
+      <div id="tl"></div>
+    </div>
+    <div class="week-view" id="week-view" style="flex:1;">
+      <div id="wk"></div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sb-hdr">Goals at a glance</div>
+    <div class="gpills">
+      <div class="gpill"><div class="gpill-v" style="color:var(--coral)">5K</div><div class="gpill-l">Run goal</div></div>
+      <div class="gpill"><div class="gpill-v" style="color:var(--sage)">Recomp</div><div class="gpill-l">Body goal</div></div>
+      <div class="gpill"><div class="gpill-v" style="color:var(--blue)">18mo</div><div class="gpill-l">TLDP left</div></div>
+    </div>
+
+    <div class="sb-hdr">My Plans</div>
+    <button class="ptile" onclick="openDrawer('career')"><div class="picon" style="background:var(--blue-pale)">💼</div><div class="plabel"><div class="pname">Career & Interview Prep</div><div class="pdesc">5 phases · offer by May 2027</div></div><div class="parrow">›</div></button>
+    <button class="ptile" onclick="openDrawer('papers')"><div class="picon" style="background:var(--purple-pale)">📄</div><div class="plabel"><div class="pname">Research & Papers</div><div class="pdesc">4 papers · VTA submit Q2</div></div><div class="parrow">›</div></button>
+    <button class="ptile" onclick="openDrawer('body')"><div class="picon" style="background:var(--coral-pale)">🏃</div><div class="plabel"><div class="pname">Body & Fitness</div><div class="pdesc">Recomp · 5K · weekly split</div></div><div class="parrow">›</div></button>
+    <button class="ptile" onclick="openDrawer('skin')"><div class="picon" style="background:var(--rose-pale)">✨</div><div class="plabel"><div class="pname">Skin & Hair</div><div class="pdesc">Barrier stable · azelaic next</div></div><div class="parrow">›</div></button>
+    <button class="ptile" onclick="openDrawer('health')"><div class="picon" style="background:var(--sage-pale)">🩺</div><div class="plabel"><div class="pname">Health</div><div class="pdesc">Bloodwork · habits · Bupropion</div></div><div class="parrow">›</div></button>
+    <button class="ptile" onclick="openDrawer('mealprep')"><div class="picon" style="background:var(--sage-pale)">🥗</div><div class="plabel"><div class="pname">Meal Prep System</div><div class="pdesc">Weekly plan · grocery list · cook order</div></div><div class="parrow">›</div></button>
+    <button class="ptile" onclick="openDrawer('personal')"><div class="picon" style="background:var(--gold-pale)">🍨</div><div class="plabel"><div class="pname">Personal & Creative</div><div class="pdesc">Gelato · chess · French · piano</div></div><div class="parrow">›</div></button>
+
+    <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;" class="sb-hdr">
+      <span>Today's Habits</span>
+      <button onclick="openDrawer('progress')" style="background:none;border:none;cursor:pointer;font-size:9px;font-weight:800;color:var(--gold);font-family:'Nunito',sans-serif;letter-spacing:0.08em;text-transform:uppercase;">View Progress ›</button>
+    </div>
+    <div class="hbit" id="hab-skincare" onclick="togHabit('skincare',this)"><div class="hcheck"></div><div class="hlbl">🧴 Skincare routine</div><div class="hstreak" id="streak-skincare"></div></div>
+    <div class="hbit" id="hab-redlight" onclick="togHabit('redlight',this)"><div class="hcheck"></div><div class="hlbl">🔴 Red light mask</div><div class="hstreak" id="streak-redlight"></div></div>
+    <div class="hbit" id="hab-gym" onclick="togHabit('gym',this)"><div class="hcheck"></div><div class="hlbl">💪 Gym / workout</div><div class="hstreak" id="streak-gym"></div></div>
+    <div class="hbit" id="hab-bupropion" onclick="togHabit('bupropion',this)"><div class="hcheck"></div><div class="hlbl">💊 Bupropion</div><div class="hstreak" id="streak-bupropion"></div></div>
+    <div class="hbit" id="hab-water" onclick="togHabit('water',this)"><div class="hcheck"></div><div class="hlbl">💧 2–3L water</div><div class="hstreak" id="streak-water"></div></div>
+    <div class="hbit" id="hab-sunlight" onclick="togHabit('sunlight',this)"><div class="hcheck"></div><div class="hlbl">☀️ Morning sunlight</div><div class="hstreak" id="streak-sunlight"></div></div>
+    <div class="hbit" id="hab-mika" onclick="togHabit('mika',this)"><div class="hcheck"></div><div class="hlbl">🐱 Feed Mika</div><div class="hstreak" id="streak-mika"></div></div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="d-overlay" id="d-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="d-hdr">
+    <div><div class="d-eyebrow" id="d-eye"></div><div class="d-title" id="d-title"></div></div>
+    <button class="d-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="d-body" id="d-body"></div>
+</div>
+
+<script>
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL = 'https://wrswtnrbpwnhvoymwvrq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_QWljj1Md9E-fvWUsChJyDQ_KxYhwyQO';
+
+// Lightweight Supabase client — no npm needed
+const sb = {
+  async query(table, method='GET', body=null, params=''){
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, {
+      method,
+      headers:{
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': method==='POST' ? 'resolution=merge-duplicates' : ''
+      },
+      body: body ? JSON.stringify(body) : null
+    });
+    if(!res.ok){ console.error('Supabase error:', await res.text()); return null; }
+    return method==='GET' ? res.json() : res;
+  },
+  async get(table, params=''){ return this.query(table,'GET',null,params); },
+  async upsert(table, body){ return this.query(table,'POST',body,''); },
+  async patch(table, body, params){ return this.query(table,'PATCH',body,params); },
+};
+
+// ── CLOCK & DATE ──
+function tick(){
+  const n=new Date();
+  let h=n.getHours(),m=n.getMinutes(),ap=h>=12?'PM':'AM';
+  h=h%12||12;
+  document.getElementById('ct').innerHTML=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+'<span class="clock-ap">'+ap+'</span>';
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  document.getElementById('cd').textContent=days[n.getDay()];
+  document.getElementById('g-sub').textContent=n.getHours()<12?'Good morning':n.getHours()<17?'Good afternoon':'Good evening';
+}
+tick(); setInterval(tick,15000);
+
+const now=new Date();
+document.getElementById('g-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+const sy=new Date(now.getFullYear(),0,1),ey=new Date(now.getFullYear()+1,0,1);
+const pct=Math.round(((now-sy)/(ey-sy))*100);
+document.getElementById('ypct').textContent=pct+'%';
+document.getElementById('yfill').style.width=pct+'%';
+
+// ── SCHEDULE ──
+const DAY_SCHEDULES = {
+  0:[// Sun
+    {h:7,m:30,eh:8,em:0,t:'🌅 Wake Up + Start Laundry',loc:'Laundry room',c:'var(--gold)'},
+    {h:8,m:0,eh:8,em:30,t:'🧘 Meditation + Journal',loc:'Kitchen/Rooftop',c:'var(--purple)'},
+    {h:8,m:30,eh:11,em:30,t:'🥗 Meal Prep — Full Sunday System',loc:'Kitchen',c:'var(--sage)'},
+    {h:9,m:30,eh:9,em:45,t:'  ↳ Start grains + hard boil eggs',loc:'Kitchen',c:'var(--sage)'},
+    {h:9,m:45,eh:10,em:30,t:'  ↳ Chop, assemble, portion into single servings',loc:'Kitchen',c:'var(--sage)'},
+    {h:10,m:30,eh:11,em:0,t:'  ↳ Package, label, fridge organized grab-and-go',loc:'Kitchen',c:'var(--sage)'},
+    {h:11,m:0,eh:11,em:30,t:'🔄 Switch Laundry',loc:'Laundry room',c:'var(--gold)'},
+    {h:11,m:30,eh:11,em:45,t:'  ↳ Kitchen clean + reset',loc:'Kitchen',c:'var(--sage)'},
+    {h:14,m:0,eh:17,em:0,t:'🧠 Deep Work — Research + Portfolio',loc:'Library',c:'var(--purple)'},
+    {h:17,m:30,eh:17,em:45,t:'🐱 Feed Mika',loc:'Home',c:'var(--rose)'},
+    {h:18,m:0,eh:18,em:30,t:'🏋️ Fold + put away laundry',loc:'Bedroom',c:'var(--gold)'},
+    {h:21,m:30,eh:22,em:0,t:'📋 Week Preview + Full Prep',loc:'Bedroom',c:'var(--blue)'},
+    {h:22,m:0,eh:22,em:15,t:'💅 Nails check',loc:'Bathroom',c:'var(--rose)'},
+    {h:22,m:0,eh:22,em:30,t:'🧴 PM Skincare',loc:'Bathroom',c:'var(--rose)'},
+  ],// Sun
+  1:[// Mon
+    {h:6,m:30,eh:9,em:30,t:'🌅 Power Morning + Gym',loc:'Home → Gym',c:'var(--gold)'},
+    {h:8,m:30,eh:9,em:30,t:'💪 Glutes + Posterior Chain',loc:'Building gym',c:'var(--coral)'},
+    {h:9,m:30,eh:16,em:0,t:'💼 Work from Home',loc:'Home',c:'var(--sage)'},
+    {h:17,m:30,eh:17,em:45,t:'🐱 Feed Mika',loc:'Home',c:'var(--rose)'},
+    {h:19,m:0,eh:22,em:0,t:'📚 Career Prep Study',loc:'Library',c:'var(--purple)'},
+    {h:21,m:30,eh:21,em:50,t:'🔴 Red Light Mask',loc:'Bathroom',c:'var(--coral)'},
+    {h:22,m:0,eh:22,em:30,t:'🧴 PM Skincare',loc:'Bathroom',c:'var(--rose)'},
+  ],
+  2:[// Tue
+    {h:6,m:30,eh:8,em:0,t:'⚡ Power Morning — Shuttle Day',loc:'Home',c:'var(--gold)'},
+    {h:7,m:0,eh:7,em:15,t:'🪮 Eyebrows',loc:'Bathroom',c:'var(--rose)'},
+    {h:7,m:0,eh:7,em:30,t:'🚌 Newark Shuttle departs',loc:'7:00am sharp',c:'var(--blue)'},
+    {h:8,m:0,eh:9,em:45,t:'🚌 Shuttle — Interview Prep Reading',loc:'Commute',c:'var(--blue)'},
+    {h:8,m:30,eh:16,em:0,t:'💼 J&J Office',loc:'Newark',c:'var(--sage)'},
+    {h:16,m:0,eh:17,em:30,t:'🚌 Commute Home — French + Chess',loc:'Shuttle',c:'var(--blue)'},
+    {h:17,m:30,eh:17,em:45,t:'🐱 Feed Mika',loc:'Home',c:'var(--rose)'},
+    {h:18,m:30,eh:19,em:15,t:'💪 Core + Arms',loc:'Building gym',c:'var(--coral)'},
+    {h:19,m:30,eh:21,em:30,t:'📚 Electrical/Hardware Study',loc:'Plant room',c:'var(--purple)'},
+    {h:21,m:30,eh:21,em:50,t:'🔴 Red Light Mask',loc:'Bathroom',c:'var(--coral)'},
+    {h:22,m:0,eh:22,em:30,t:'🧴 PM Skincare',loc:'Bathroom',c:'var(--rose)'},
+  ],
+  3:[// Wed
+    {h:6,m:30,eh:8,em:0,t:'⚡ Power Morning — Shuttle Day',loc:'Home',c:'var(--gold)'},
+    {h:7,m:0,eh:7,em:30,t:'🚌 Newark Shuttle departs',loc:'7:00am sharp',c:'var(--blue)'},
+    {h:8,m:0,eh:9,em:45,t:'🚌 Shuttle — Electrical/HW Reading',loc:'Commute',c:'var(--blue)'},
+    {h:8,m:30,eh:16,em:0,t:'💼 J&J Office',loc:'Newark',c:'var(--sage)'},
+    {h:16,m:0,eh:17,em:30,t:'🚌 Commute Home — French + Chess',loc:'Shuttle',c:'var(--blue)'},
+    {h:17,m:30,eh:17,em:45,t:'🐱 Feed Mika',loc:'Home',c:'var(--rose)'},
+    {h:19,m:0,eh:22,em:0,t:'📚 Career Prep Study',loc:'Library',c:'var(--purple)'},
+    {h:20,m:0,eh:20,em:15,t:'📱 Book Shuttle',loc:'App',c:'var(--text-dim)'},
+    {h:21,m:30,eh:21,em:50,t:'🔴 Red Light Mask',loc:'Bathroom',c:'var(--coral)'},
+    {h:22,m:0,eh:22,em:15,t:'💅 Nails check',loc:'Bathroom',c:'var(--rose)'},
+    {h:22,m:0,eh:22,em:30,t:'🧴 PM Skincare',loc:'Bathroom',c:'var(--rose)'},
+  ],
+  4:[// Thu
+    {h:6,m:30,eh:8,em:0,t:'⚡ Power Morning — Shuttle Day',loc:'Home',c:'var(--gold)'},
+    {h:7,m:0,eh:7,em:30,t:'🚌 Newark Shuttle departs',loc:'7:00am sharp',c:'var(--blue)'},
+    {h:8,m:0,eh:9,em:45,t:'🚌 Shuttle — Domain/Industry Reading',loc:'Commute',c:'var(--blue)'},
+    {h:8,m:30,eh:16,em:0,t:'💼 J&J Office',loc:'Newark',c:'var(--sage)'},
+    {h:16,m:0,eh:17,em:30,t:'🚌 Commute Home — French + Chess',loc:'Shuttle',c:'var(--blue)'},
+    {h:17,m:30,eh:17,em:45,t:'🐱 Feed Mika',loc:'Home',c:'var(--rose)'},
+    {h:18,m:30,eh:19,em:15,t:'🏃 Easy Treadmill Run',loc:'Building gym',c:'var(--coral)'},
+    {h:19,m:30,eh:21,em:30,t:'📚 Electrical/Hardware Study',loc:'Plant room',c:'var(--purple)'},
+    {h:21,m:30,eh:21,em:50,t:'🔴 Red Light Mask',loc:'Bathroom',c:'var(--coral)'},
+    {h:22,m:0,eh:22,em:30,t:'🧴 PM Skincare',loc:'Bathroom',c:'var(--rose)'},
+  ],
+  5:[// Fri
+    {h:6,m:30,eh:9,em:30,t:'🌅 Power Morning + Run',loc:'Home → Gym',c:'var(--gold)'},
+    {h:8,m:30,eh:9,em:30,t:'🏃 5K Training Run',loc:'Building gym',c:'var(--coral)'},
+    {h:9,m:30,eh:17,em:0,t:'💼 Work from Home',loc:'Home',c:'var(--sage)'},
+    {h:17,m:30,eh:17,em:45,t:'🐱 Feed Mika',loc:'Home',c:'var(--rose)'},
+    {h:19,m:0,eh:22,em:0,t:'📚 Career Prep Study',loc:'Library',c:'var(--purple)'},
+    {h:21,m:30,eh:21,em:50,t:'🔴 Red Light Mask',loc:'Bathroom',c:'var(--coral)'},
+    {h:22,m:0,eh:22,em:30,t:'🧴 PM Skincare',loc:'Bathroom',c:'var(--rose)'},
+  ],
+  6:[// Sat
+    {h:7,m:30,eh:9,em:30,t:'🌅 Saturday Morning',loc:'Home',c:'var(--gold)'},
+    {h:8,m:30,eh:10,em:0,t:'💪 Full Body Heavy',loc:'Building gym',c:'var(--coral)'},
+    {h:12,m:0,eh:15,em:0,t:'🍨 Gelato Lab',loc:'Kitchen',c:'var(--gold)'},
+    {h:14,m:0,eh:14,em:0,t:'🐱 Feed Mika',loc:'Home',c:'var(--rose)'},
+    {h:15,m:30,eh:16,em:0,t:'🛒 Order Groceries for Sunday',loc:'Instacart/app',c:'var(--green)'},
+    {h:16,m:30,eh:18,em:30,t:'⚡ Electrical/Hardware Self-Study',loc:'Workshop',c:'var(--purple)'},
+    {h:21,m:30,eh:21,em:50,t:'🔴 Red Light Mask',loc:'Bathroom',c:'var(--coral)'},
+    {h:22,m:0,eh:22,em:15,t:'💅 Nails check',loc:'Bathroom',c:'var(--rose)'},
+    {h:22,m:0,eh:22,em:30,t:'🧴 PM Skincare',loc:'Bathroom',c:'var(--rose)'},
+  ],
+};
+
+function fmt(h,m){const d=h>12?h-12:h===0?12:h,s=h>=12?'pm':'am';return d+(m>0?':'+String(m).padStart(2,'0'):'')+s;}
+
+function buildTL(){
+  const c=document.getElementById('tl');
+  const nowH=now.getHours(),nowM=now.getMinutes();
+  const evs=DAY_SCHEDULES[now.getDay()]||[];
+  for(let h=6;h<=23;h++){
+    const row=document.createElement('div');
+    row.className='tl-row';
+    row.id='hr'+h;
+    const tDiv=document.createElement('div');
+    tDiv.className='tl-time';
+    const dh=h>12?h-12:h===0?12:h;
+    tDiv.textContent=dh+(h>=12?'pm':'am');
+    const sp=document.createElement('div');
+    sp.className='tl-spine';
+    const dot=document.createElement('div');
+    dot.className='tl-dot'+(h===nowH?' now':'');
+    sp.appendChild(dot);
+    const cnt=document.createElement('div');
+    cnt.className='tl-content';
+    const hevs=evs.filter(e=>e.h===h);
+    if(!hevs.length){const em=document.createElement('div');em.className='tl-empty';cnt.appendChild(em);}
+    else hevs.forEach(ev=>{
+      const ed=document.createElement('div');
+      ed.className='tl-ev';
+      ed.innerHTML=`<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${ev.c};border-radius:3px 0 0 3px"></div><div class="tl-ev-t">${ev.t}</div><div class="tl-ev-s">${fmt(ev.h,ev.m)} – ${fmt(ev.eh,ev.em)} · ${ev.loc}</div>`;
+      cnt.appendChild(ed);
+    });
+    row.appendChild(tDiv);row.appendChild(sp);row.appendChild(cnt);
+    c.appendChild(row);
+  }
+  setTimeout(()=>{
+    const el=document.getElementById('hr'+Math.max(6,nowH-1));
+    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  },500);
+}
+buildTL();
+
+// ── WEEKLY VIEW ──
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function buildWeekly(){
+  const c = document.getElementById('wk');
+  const todayDow = now.getDay();
+  // Start from Monday of current week
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+
+  for(let i=0; i<7; i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dow = d.getDay();
+    const evs = DAY_SCHEDULES[dow] || [];
+    if(!evs.length && dow === 0) {
+      // Still show Sunday even if sparse
+    }
+
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'wk-day';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'wk-day-hdr';
+    const isToday = dow === todayDow;
+    hdr.innerHTML = DAY_NAMES[dow] +
+      (isToday ? ' <span class="today-badge">Today</span>' : '') +
+      '<span>' + d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + '</span>';
+    dayDiv.appendChild(hdr);
+
+    if(!evs.length){
+      const em = document.createElement('div');
+      em.style.cssText='font-size:10px;font-weight:600;color:var(--text-dim);padding:6px 0 0 4px;';
+      em.textContent='Rest day';
+      dayDiv.appendChild(em);
+    } else {
+      evs.forEach(ev => {
+        const evDiv = document.createElement('div');
+        evDiv.className = 'wk-ev';
+        evDiv.style.borderLeftColor = ev.c;
+        evDiv.innerHTML = '<div><div class="wk-ev-t">' + ev.t + '</div><div class="wk-ev-s">' + fmt(ev.h,ev.m) + ' · ' + ev.loc + '</div></div>';
+        dayDiv.appendChild(evDiv);
+      });
+    }
+    c.appendChild(dayDiv);
+  }
+}
+buildWeekly();
+
+function showView(v){
+  const daily = document.getElementById('tl-wrap');
+  const weekly = document.getElementById('week-view');
+  const btnD = document.getElementById('btn-daily');
+  const btnW = document.getElementById('btn-weekly');
+  if(v==='daily'){
+    daily.classList.remove('hidden');
+    weekly.classList.remove('visible');
+    btnD.classList.add('active');
+    btnW.classList.remove('active');
+    // Scroll to now
+    const el = document.getElementById('hr'+Math.max(6,now.getHours()-1));
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  } else {
+    daily.classList.add('hidden');
+    weekly.classList.add('visible');
+    btnD.classList.remove('active');
+    btnW.classList.add('active');
+    // Scroll to today
+    weekly.scrollTop=0;
+  }
+}
+
+// ── HABIT SYSTEM ──
+const HABITS = ['skincare','redlight','gym','bupropion','water','sunlight','mika'];
+const TRACKED = ['skincare','redlight','gym','bupropion','water']; // streak tracked
+
+function todayKey(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function getHabitData(id){
+  try{ return JSON.parse(localStorage.getItem('habit_'+id)||'{}'); }
+  catch(e){ return {}; }
+}
+
+function saveHabitData(id,data){
+  try{ localStorage.setItem('habit_'+id, JSON.stringify(data)); } catch(e){}
+}
+
+function getStreak(id){
+  const data = getHabitData(id);
+  const today = todayKey();
+  let streak = 0;
+  let check = new Date();
+  // Don't count today in streak yet (only counts after checked)
+  check.setDate(check.getDate()-1);
+  for(let i=0;i<365;i++){
+    const k = check.getFullYear()+'-'+String(check.getMonth()+1).padStart(2,'0')+'-'+String(check.getDate()).padStart(2,'0');
+    if(data[k]) streak++;
+    else break;
+    check.setDate(check.getDate()-1);
+  }
+  return streak;
+}
+
+function updateStreakDisplay(id){
+  const el = document.getElementById('streak-'+id);
+  if(!el) return;
+  const s = getStreak(id);
+  const data = getHabitData(id);
+  const today = todayKey();
+  const doneToday = data[today];
+  if(doneToday){
+    const total = s + 1;
+    el.textContent = total > 0 ? '🔥'+total : '';
+  } else {
+    el.textContent = s > 0 ? '🔥'+s : '';
+  }
+}
+
+async function togHabit(id, el){
+  el.classList.toggle('done');
+  const ch = el.querySelector('.hcheck');
+  const done = el.classList.contains('done');
+  ch.textContent = done ? '✓' : '';
+  const today = todayKey();
+  // Save to localStorage (instant, offline-first)
+  if(TRACKED.includes(id)){
+    const data = getHabitData(id);
+    if(done) data[today] = true;
+    else delete data[today];
+    saveHabitData(id, data);
+    updateStreakDisplay(id);
+  }
+  // Save to Supabase (persistent, cross-device)
+  try {
+    await sb.upsert('habits', {
+      log_date: today,
+      habit_key: id,
+      completed: done
+    });
+  } catch(e){ console.warn('Supabase sync failed, localStorage used as fallback'); }
+}
+
+// ── SUPABASE HABIT SYNC ──
+async function loadHabitDefinitions(){
+  const defs = await sb.get('habit_definitions', '?active=eq.true&order=sort_order');
+  if(!defs) return;
+  // Render habit list dynamically from database definitions
+  const container = document.querySelector('.sidebar');
+  const habitSection = container.querySelector('[data-habits]');
+  if(!habitSection) return;
+  habitSection.innerHTML = '';
+  defs.forEach(def => {
+    const div = document.createElement('div');
+    div.className = 'hbit';
+    div.id = 'hab-' + def.habit_key;
+    div.onclick = () => togHabit(def.habit_key, div);
+    div.innerHTML = `<div class="hcheck"></div><div class="hlbl">${def.emoji} ${def.label}</div><div class="hstreak" id="streak-${def.habit_key}"></div>`;
+    habitSection.appendChild(div);
+  });
+}
+
+async function loadTodayHabits(){
+  const today = todayKey();
+  // Load from Supabase
+  const rows = await sb.get('habits', `?log_date=eq.${today}&completed=eq.true`);
+  if(!rows) return;
+  rows.forEach(row => {
+    const el = document.getElementById('hab-' + row.habit_key);
+    if(el){
+      el.classList.add('done');
+      el.querySelector('.hcheck').textContent = '✓';
+    }
+  });
+  // Also restore streaks from localStorage as fallback
+  TRACKED.forEach(id => updateStreakDisplay(id));
+}
+
+function initHabits(){
+  const today = todayKey();
+  // Restore from localStorage immediately (fast)
+  HABITS.forEach(id => {
+    const data = getHabitData(id);
+    const el = document.getElementById('hab-'+id);
+    if(!el) return;
+    if(data[today]){
+      el.classList.add('done');
+      el.querySelector('.hcheck').textContent='✓';
+    }
+    if(TRACKED.includes(id)) updateStreakDisplay(id);
+  });
+  // Then sync from Supabase (source of truth)
+  loadTodayHabits();
+}
+
+initHabits();
+
+// ── DRAWER ──
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('d-overlay').classList.remove('open');
+}
+
+function openDrawer(id){
+  const d=DRAWERS[id];
+  if(!d)return;
+  document.getElementById('d-eye').textContent=d.eye;
+  document.getElementById('d-title').textContent=d.title;
+  document.getElementById('d-body').innerHTML=d.html;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('d-overlay').classList.add('open');
+  document.getElementById('d-body').scrollTop=0;
+  if(id==='progress') renderProgress();
+}
+
+// ── PROGRESS DRAWER ──
+const HABIT_META = {
+  skincare:  {label:'🧴 Skincare routine', color:'var(--rose)'},
+  redlight:  {label:'🔴 Red light mask',   color:'var(--coral)'},
+  gym:       {label:'💪 Gym / workout',    color:'var(--sage)'},
+  bupropion: {label:'💊 Bupropion',        color:'var(--blue)'},
+  water:     {label:'💧 2–3L water',       color:'var(--gold)'},
+};
+
+function renderProgress(){
+  const container = document.getElementById('progress-content');
+  if(!container) return;
+
+  const today = new Date();
+  const todayKey2 = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+  // Build month grid for current month
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const monthName = today.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const firstDow = new Date(year, month, 1).getDay(); // 0=Sun
+
+  let html = '<div class="d-sec"><div class="d-sec-lbl">Streaks — Current</div><div style="display:flex;flex-direction:column;gap:7px;">';
+
+  TRACKED.forEach(id => {
+    const meta = HABIT_META[id];
+    const data = getHabitData(id);
+    const streak = getStreak(id) + (data[todayKey2] ? 1 : 0);
+    const doneToday = data[todayKey2] ? true : false;
+
+    // Count total completions this month
+    let monthTotal = 0;
+    for(let d2=1; d2<=daysInMonth; d2++){
+      const k = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
+      if(data[k]) monthTotal++;
+    }
+
+    html += '<div style="background:var(--bg);border-radius:13px;padding:11px 13px;box-shadow:var(--no-sm);">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+    html += '<div style="font-size:12px;font-weight:800;color:var(--text);">'+meta.label+'</div>';
+    html += '<div style="font-size:14px;font-weight:900;color:'+meta.color+';">'+(streak>0?'🔥'+streak+' day'+(streak===1?'':'s'):'—')+'</div>';
+    html += '</div>';
+    // Mini bar showing this month
+    html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
+    for(let d2=1; d2<=daysInMonth; d2++){
+      const k = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
+      const done = data[k] ? true : false;
+      const isToday = d2 === today.getDate();
+      const isFuture = d2 > today.getDate();
+      let bg, border;
+      if(done) { bg=meta.color; border='none'; }
+      else if(isFuture) { bg='transparent'; border='1px solid var(--shadow-dark)'; }
+      else { bg='var(--shadow-dark)'; border='none'; }
+      const ring = isToday ? 'outline:2px solid '+meta.color+';outline-offset:1px;' : '';
+      html += '<div style="width:14px;height:14px;border-radius:4px;background:'+bg+';border:'+border+';'+ring+'" title="'+k+'"></div>';
+    }
+    html += '</div>';
+    html += '<div style="font-size:9px;font-weight:700;color:var(--text-dim);margin-top:5px;">'+monthTotal+' / '+today.getDate()+' days this month</div>';
+    html += '</div>';
+  });
+
+  html += '</div></div>';
+
+  // Full calendar grid
+  html += '<div class="d-sec"><div class="d-sec-lbl">'+monthName+' — All Habits</div>';
+  html += '<div style="background:var(--bg);border-radius:14px;padding:14px;box-shadow:var(--no-sm);">';
+
+  // Day headers
+  const dayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">';
+  dayLabels.forEach(d2 => {
+    html += '<div style="text-align:center;font-size:8px;font-weight:800;color:var(--text-dim);letter-spacing:0.06em;">'+d2+'</div>';
+  });
+  html += '</div>';
+
+  // Calendar grid
+  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">';
+
+  // Empty cells before month starts
+  for(let i=0;i<firstDow;i++){
+    html += '<div></div>';
+  }
+
+  for(let d2=1;d2<=daysInMonth;d2++){
+    const k = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
+    const isToday = d2===today.getDate();
+    const isFuture = d2>today.getDate();
+
+    // Count how many TRACKED habits done this day
+    let count = 0;
+    TRACKED.forEach(id => {
+      const data = getHabitData(id);
+      if(data[k]) count++;
+    });
+    const pct = TRACKED.length > 0 ? count/TRACKED.length : 0;
+
+    let bg;
+    if(isFuture) bg='transparent';
+    else if(count===0) bg='var(--shadow-dark)';
+    else if(pct<0.5) bg='rgba(196,145,58,0.3)';
+    else if(pct<1) bg='rgba(196,145,58,0.65)';
+    else bg='var(--gold)';
+
+    const ring = isToday ? 'outline:2px solid var(--gold);outline-offset:1px;' : '';
+    const border = isFuture ? 'border:1px solid var(--shadow-dark);' : '';
+    html += '<div style="aspect-ratio:1;border-radius:5px;background:'+bg+';'+ring+border+'display:flex;align-items:center;justify-content:center;" title="'+k+': '+count+'/'+TRACKED.length+' habits">';
+    if(isToday) html += '<span style="font-size:7px;font-weight:900;color:'+(count>0?'white':'var(--gold)')+'">'+d2+'</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;">';
+  html += '<div style="font-size:9px;font-weight:700;color:var(--text-dim);">Legend:</div>';
+  html += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:var(--gold)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">All done</span></div>';
+  html += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(196,145,58,0.5)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">Partial</span></div>';
+  html += '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:var(--shadow-dark)"></div><span style="font-size:9px;font-weight:600;color:var(--text-dim);">Missed</span></div>';
+  html += '</div>';
+  html += '</div></div>';
+
+  container.innerHTML = html;
+}
+
+const DRAWERS = {
+
+career:{
+eye:'Career & Interview Prep',
+title:'Road to $316–530K',
+html:`
+<div class="d-callout"><strong>Offer confirmed by May/June 2027.</strong> Work backwards: apply Sept/Oct 2026, sprint prep July/Aug, build now. Your Tuesday shuttle is already dedicated to interview prep — that habit is already running.</div>
+<div class="d-sec"><div class="d-sec-lbl">Interview Prep — 5 Phases</div>
+<div class="d-phase" style="border-left-color:var(--coral)"><div class="d-ph-n" style="color:var(--coral)">1</div><div><div class="d-ph-period" style="color:var(--coral)">Now → May 2026 · Foundation</div><div class="d-ph-title">ML concepts + LeetCode easy/medium</div><div class="d-ph-desc">30 min Tue shuttle. 2–3 problems/week. Build 6–8 STAR behavioral stories. Read Apple Health papers, NVIDIA healthcare blog, Anthropic research posts.</div></div></div>
+<div class="d-phase" style="border-left-color:var(--gold)"><div class="d-ph-n" style="color:var(--gold)">2</div><div><div class="d-ph-period" style="color:var(--gold)">May → July 2026 · Build</div><div class="d-ph-title">System design + LeetCode medium/hard + SQL</div><div class="d-ph-desc">ML system design: feature stores, model serving, monitoring. Chip Huyen's ML Systems Design. Know your papers cold. Apple Watch PPG stack. NVIDIA Clara. Anthropic evals.</div></div></div>
+<div class="d-phase" style="border-left-color:var(--sage)"><div class="d-ph-n" style="color:var(--sage)">3</div><div><div class="d-ph-period" style="color:var(--sage)">Aug → Oct 2026 · Sprint</div><div class="d-ph-title">Mock interviews 2x/week + company sprints</div><div class="d-ph-desc">Interviewing.io or Pramp. 2-week sprints per company: Apple → NVIDIA → Anthropic → OpenEvidence. Quantify every resume bullet. Hackathon + CoreML demo live on GitHub.</div></div></div>
+<div class="d-phase" style="border-left-color:var(--blue)"><div class="d-ph-n" style="color:var(--blue)">4</div><div><div class="d-ph-period" style="color:var(--blue)">Oct 2026 → Feb 2027 · Active</div><div class="d-ph-title">Live applications + first rounds</div><div class="d-ph-desc">Apply Apple first — longest pipeline. Warm outreach → referrals. Log every question asked. Debrief within 24 hrs. Each interview sharpens the next.</div></div></div>
+<div class="d-phase" style="border-left-color:var(--purple)"><div class="d-ph-n" style="color:var(--purple)">5</div><div><div class="d-ph-period" style="color:var(--purple)">Feb → May 2027 · Offers</div><div class="d-ph-title">Competing offers = leverage</div><div class="d-ph-desc">Time offers to land close together. 2–3 competing offers = real negotiation. Never accept on the spot. Counter everything. First offer is never final.</div></div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Skill Gaps — Current</div>
+<div class="d-prog"><div class="d-prog-row"><span class="d-prog-lbl">Biosignals / wearables domain</span><span class="d-prog-val">Strong</span></div><div class="d-prog-track"><div class="d-prog-fill" style="width:75%;background:var(--sage)"></div></div></div>
+<div class="d-prog"><div class="d-prog-row"><span class="d-prog-lbl">Clinical AI / LLM deployment</span><span class="d-prog-val">Building (Abiomed)</span></div><div class="d-prog-track"><div class="d-prog-fill" style="width:55%;background:var(--gold)"></div></div></div>
+<div class="d-prog"><div class="d-prog-row"><span class="d-prog-lbl">LeetCode + algorithms</span><span class="d-prog-val">Foundation phase</span></div><div class="d-prog-track"><div class="d-prog-fill" style="width:35%;background:var(--coral)"></div></div></div>
+<div class="d-prog"><div class="d-prog-row"><span class="d-prog-lbl">ML system design</span><span class="d-prog-val">Build phase</span></div><div class="d-prog-track"><div class="d-prog-fill" style="width:25%;background:var(--blue)"></div></div></div>
+<div class="d-prog"><div class="d-prog-row"><span class="d-prog-lbl">Hardware / embedded ML</span><span class="d-prog-val">Gap — study Sat</span></div><div class="d-prog-track"><div class="d-prog-fill" style="width:20%;background:var(--purple)"></div></div></div>
+<div class="d-prog"><div class="d-prog-row"><span class="d-prog-lbl">STAR behavioral story bank</span><span class="d-prog-val">Start now</span></div><div class="d-prog-track"><div class="d-prog-fill" style="width:10%;background:var(--rose)"></div></div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Urgent This Week</div>
+<div class="d-card"><div class="d-status su">Urgent</div><div class="d-ct">Email TLDP PM + Cindy Tong — OTTAVA rotation</div><div class="d-cb">Single highest-leverage career move. Pushes Intuitive CDE fit 68% → 78%+.</div><div class="d-na"><strong>Action:</strong> Email this week</div></div>
+<div class="d-card"><div class="d-status su">Expires soon</div><div class="d-ct">Follow up with Ben Griffiths (NVIDIA)</div><div class="d-cb">GTC connection goes cold fast. Reference cardiac digital twin work. Ask for 20-min call on Healthcare SA trajectory.</div><div class="d-na"><strong>Action:</strong> LinkedIn message this week</div></div>
+<div class="d-card"><div class="d-status su">Start now</div><div class="d-ct">Start LangChain + LangGraph courses</div><div class="d-cb">Free at deeplearning.ai · ~4 hrs each · must complete before May 15 hackathon.</div><div class="d-na"><strong>Action:</strong> Start tonight</div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Certifications</div>
+<div class="d2">
+<div class="d-card"><div class="d-status su">Now · Free</div><div class="d-ct">LangChain + LangGraph</div><div class="d-cb">deeplearning.ai — ~4 hrs each. Before May 15.</div></div>
+<div class="d-card"><div class="d-status sp">Post-hackathon</div><div class="d-ct">NVIDIA DLI — ~$500</div><div class="d-cb">Fundamentals of DL + NLP. ~16 hrs. LinkedIn cert.</div></div>
+<div class="d-card"><div class="d-status sp">Q3 2026</div><div class="d-ct">AWS ML Specialty — ~$300</div><div class="d-cb">Closes cloud gap for NVIDIA HLS.</div></div>
+</div></div>`
+},
+
+papers:{
+eye:'Research & Papers',
+title:'4 Papers in Flight',
+html:`
+<div class="d-callout"><strong>VTA is first-author — most valuable for Anthropic + Apple. PPG/sleep staging is most valuable for Apple + Oura. IEEE is in press — add to LinkedIn now if not there.</strong></div>
+<div class="d-sec"><div class="d-sec-lbl">Papers in Flight</div>
+<div class="d-paper" style="border-top-color:var(--purple)"><div class="d-paper-authors">First Author — Independent</div><div class="d-paper-title">Decoding VTA Dopamine Neuron Activity During Social Behavior Using Deep Learning</div><div class="d-paper-journal">Target: Frontiers in Computational Neuroscience · eNeuro · PLOS ONE</div><div class="d-cb">ConvLSTM2D vs baselines. First-author, independent. Directly relevant to Anthropic, Synchron, Neuralink, Meta Neuromotor.</div><div class="d-prog" style="margin-top:8px"><div class="d-prog-row"><span class="d-prog-lbl">Completion</span><span class="d-prog-val">Draft → review → submit</span></div><div class="d-prog-track"><div class="d-prog-fill" style="width:55%;background:var(--purple)"></div></div></div><div class="d-na"><strong>This week:</strong> Email Losonczy or Mesgarani with draft. Submit end of Q2.</div><div style="margin-top:6px"><span class="d-tag" style="background:rgba(234,88,12,0.1);color:#c45c1a">Anthropic +3%</span><span class="d-tag" style="background:rgba(13,148,136,0.1);color:#0d9488">Synchron +4%</span><span class="d-tag" style="background:var(--purple-pale);color:var(--purple)">Neuralink +3%</span></div></div>
+<div class="d-paper" style="border-top-color:var(--blue)"><div class="d-paper-authors">3rd/4th Author — J&J Digital Health</div><div class="d-paper-title">Comparing Pretrained PPG and Accelerometer Encoders for Wearable Sleep Staging</div><div class="d-paper-journal">Journal paper — target publication 2026</div><div class="d-cb">Maps directly onto Apple Watch sensor stack. Most on-target credential for Apple Health Sensing. Ensure your contribution is documented in author note.</div><div class="d-prog" style="margin-top:8px"><div class="d-prog-row"><span class="d-prog-lbl">Completion</span><span class="d-prog-val">In progress → Q3 2026</span></div><div class="d-prog-track"><div class="d-prog-fill" style="width:40%;background:var(--blue)"></div></div></div><div class="d-na"><strong>When published:</strong> Lead every Apple + Oura application with this paper.</div><div style="margin-top:6px"><span class="d-tag" style="background:var(--blue-pale);color:var(--blue)">Apple +4%</span><span class="d-tag" style="background:var(--purple-pale);color:var(--purple)">Oura +5%</span></div></div>
+<div class="d-paper" style="border-top-color:var(--green)"><div class="d-paper-authors">5th Author — J&J</div><div class="d-paper-title">IEEE Conference Paper (J&J)</div><div class="d-paper-journal">IEEE — in press ✓</div><div class="d-cb">Add to LinkedIn publications and resume now as "in press."</div><div class="d-na"><strong>Action now:</strong> Add to LinkedIn immediately.</div></div>
+<div class="d-paper" style="border-top-color:var(--gold)"><div class="d-paper-authors">Lead/Co-author — J&J Abiomed</div><div class="d-paper-title">LLM-Assisted Clinical Safety Narrative Generation from De-identified PDFs</div><div class="d-paper-journal">Target: AMIA 2026 or CHIL Workshop</div><div class="d-cb">RAG design + safety review loop. The LLM-in-healthcare publication Anthropic and OpenEvidence need to see. Confirm J&J IP policy with manager first.</div><div class="d-na"><strong>Q4 2026:</strong> Check J&J publication policy. AMIA submissions open Q3–Q4.</div><div style="margin-top:6px"><span class="d-tag" style="background:rgba(234,88,12,0.1);color:#c45c1a">Anthropic +3%</span><span class="d-tag" style="background:rgba(190,18,60,0.1);color:#be123c">OpenEvidence +3%</span></div></div>
+</div>`
+},
+
+body:{
+eye:'Body & Fitness',
+title:'Recomp + 5K',
+html:`
+<div class="d-callout"><strong>The framing:</strong> At 5'5" and 125–130 lbs your BMI is solidly healthy. Goal is replacing fat with muscle — the scale is secondary. 200–300 kcal deficit from food only + gym split = visible recomp in 4–6 months.</div>
+<div class="d-sec"><div class="d-sec-lbl">Goals</div>
+<div class="d2">
+<div class="d-card"><div style="font-size:24px;font-weight:900;color:var(--coral);margin-bottom:4px">5K</div><div class="d-cb">Currently: 15–20 min continuous.<br><strong>Target: sub-35 min · July 2026</strong><br>Sign up for actual race now — external date is critical.</div></div>
+<div class="d-card"><div style="font-size:24px;font-weight:900;color:var(--sage);margin-bottom:4px">Recomp</div><div class="d-cb">200–300 kcal deficit/day from food only.<br><strong>100–115g protein/day</strong><br>Muscle over scale. 4–6 month timeline.</div></div>
+</div></div>
+<div class="d-sec"><div class="d-sec-lbl">Weekly Training Split</div>
+<div class="d-step"><div class="d-step-tag">MON</div><div><div class="d-step-title">Glutes + Posterior Chain</div><div class="d-step-desc">Hip thrust 4×12 → RDL 3×12 → cable kickback 3×15 → side abduction 3×20. <strong>Gym before laptop. Non-negotiable.</strong></div></div></div>
+<div class="d-step"><div class="d-step-tag">TUE</div><div><div class="d-step-title">Core + Arms — 35 min max</div><div class="d-step-desc">Pallof press → side plank → shoulder tap → tricep pushdown → overhead ext. Walk in, execute, leave.</div></div></div>
+<div class="d-step"><div class="d-step-tag">WED</div><div><div class="d-step-title">Active Recovery</div><div class="d-step-desc">Walking desk only. Lunch walk. No gym. Mid-week rest is what makes Thu/Fri possible.</div></div></div>
+<div class="d-step"><div class="d-step-tag">THU</div><div><div class="d-step-title">Easy Run — Treadmill</div><div class="d-step-desc">20–30 min conversational → walking lunge 3×12 → single-leg bridge 3×15. C25K program.</div></div></div>
+<div class="d-step"><div class="d-step-tag">FRI</div><div><div class="d-step-title">5K Training Run</div><div class="d-step-desc">C25K per week → dead bug → hollow hold → rib tuck breathing. <strong>Clothes on before coffee finishes.</strong></div></div></div>
+<div class="d-step"><div class="d-step-tag">SAT</div><div><div class="d-step-title">Full Body Heavy — best session</div><div class="d-step-desc">Sumo DL 3×10 → lat pulldown 3×12 → cable pull-through 3×15 → band walks. Fresh legs, peak performance.</div></div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">5K — 12 Week Plan</div>
+<div class="d-sphase" style="border-left-color:var(--coral)"><div class="d-sp-period" style="color:var(--coral)">Weeks 1–4 · Foundation</div><div class="d-sp-title">Walk/run intervals</div><div class="d-sp-desc">C25K on Fri + Thu treadmill. Goal: 25 continuous min by week 4. Walking desk = 8,000 steps/day at office.</div></div>
+<div class="d-sphase" style="border-left-color:var(--coral)"><div class="d-sp-period" style="color:var(--coral)">Weeks 5–8 · Build</div><div class="d-sp-title">Continuous running</div><div class="d-sp-desc">25–30 min continuous Fri. Sat effort 35–40 min easy. One tempo Thu. Short strength circuit prevents injury.</div></div>
+<div class="d-sphase" style="border-left-color:var(--coral)"><div class="d-sp-period" style="color:var(--coral)">Weeks 9–12 · Race</div><div class="d-sp-title">Race ready</div><div class="d-sp-desc">3 runs/week, 30–35 min. <strong>Sign up for an actual race now</strong> — June/July NYC/NJ. Target sub-35 min.</div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Posture Corrections</div>
+<div class="d-step"><div class="d-step-tag">①</div><div><div class="d-step-title">Forward head — chin tucks daily</div><div class="d-step-desc">Pull chin straight back (not down), hold 5 sec, 10 reps. Ears over shoulders at rest.</div></div></div>
+<div class="d-step"><div class="d-step-tag">②</div><div><div class="d-step-title">Rib flare — rib tuck breathing</div><div class="d-step-desc">Ribs down throughout the day. Dead bug exercise. Key cue: "ribs toward hip bones."</div></div></div>
+<div class="d-step"><div class="d-step-tag">③</div><div><div class="d-step-title">Shoulder rounding — face pulls + lat pulldown</div><div class="d-step-desc">Face pulls, band pull-aparts, wall angels. Lat pulldown on Sat directly counteracts this.</div></div></div>
+</div>`
+},
+
+skin:{
+eye:'Skin & Hair',
+title:'Barrier Stable. Build Phase.',
+html:`
+<div class="d-callout"><strong>Status: barrier repaired.</strong> No flaking, no dryness, skin moisturized. Main goals now: fade red PIH scars + clear remaining active pimples on cheeks. Add one thing at a time, ~2 weeks apart.</div>
+<div class="d-sec"><div class="d-sec-lbl">Current Routine — Active Now ✓</div>
+<div class="d-step"><div class="d-step-tag">AM</div><div><div class="d-step-title">PanOxyl face wash</div><div class="d-step-desc"><strong>30 sec lather, rinse thoroughly.</strong> Targeting active pimples. 2.5% formula is gentler if experiencing extra dryness.</div></div></div>
+<div class="d-step"><div class="d-step-tag">PM</div><div><div class="d-step-title">Red light mask — 10–20 min on clean dry skin</div><div class="d-step-desc">Use <strong>before</strong> tretinoin. 630–700nm reduces inflammation + speeds PIH fading. 3–5x per week.</div></div></div>
+<div class="d-step"><div class="d-step-tag">PM</div><div><div class="d-step-title">Tretinoin — pea-sized, dry skin</div><div class="d-step-desc">Primary active for PIH and acne. Less is more. Don't apply to damp skin — increases irritation.</div></div></div>
+<div class="d-step"><div class="d-step-tag">PM</div><div><div class="d-step-title">Aquaphor — seal everything</div><div class="d-step-desc">Buffers tretinoin + seals moisture. Keep as PM occlusive — it's doing real work.</div></div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Add-On Sequence — One at a Time</div>
+<div class="d-step"><div class="d-step-tag">① Now</div><div><div class="d-step-title">Azelaic acid 15–20% — AM</div><div class="d-step-desc"><strong>Best move right now.</strong> Inhibits melanin (fastest PIH fader), anti-inflammatory, gentle. The Ordinary Azelaic Acid 10% or Finacea 15%. After PanOxyl, before moisturizer.</div></div></div>
+<div class="d-step"><div class="d-step-tag">② Next</div><div><div class="d-step-title">SPF 30–50 — AM daily</div><div class="d-step-desc">Without SPF, azelaic acid + tretinoin are working against UV every day. <strong>EltaMD UV Clear SPF 46</strong> or La Roche-Posay Anthelios UVMune — both chemical, non-comedogenic. Avoid mineral/zinc formulas for acne-prone skin. Bucket hat stays until you find your formula.</div></div></div>
+<div class="d-step"><div class="d-step-tag">③ Then</div><div><div class="d-step-title">AM moisturizer — lightweight</div><div class="d-step-desc">CeraVe Moisturizing Cream or Neutrogena Hydro Boost. Replaces Aquaphor in the morning only.</div></div></div>
+<div class="d-step"><div class="d-step-tag">④ Then</div><div><div class="d-step-title">Sandwich method for tretinoin</div><div class="d-step-desc">Moisturizer → tretinoin → Aquaphor. Bottom layer buffers absorption, cuts irritation, same efficacy.</div></div></div>
+<div class="d-step"><div class="d-step-tag">⑤ Later</div><div><div class="d-step-title">Niacinamide 10% — AM + PM</div><div class="d-step-desc">The Ordinary. Sebum regulation, pore tightening, PIH support. Add once everything else is stable.</div></div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Mirror Protocol — Skin Picking</div>
+<div class="d-callout coral"><strong>The rule:</strong> Pick up the gua sha from the bathroom counter BEFORE entering the bathroom. Hold it at the mirror. Every night. Hands occupied = can't pick. Within 2–3 weeks the tool becomes the new cue. Lip balm everywhere: desk, pocket, nightstand.</div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Results Timeline</div>
+<div class="d-sphase" style="border-left-color:var(--gold)"><div class="d-sp-period" style="color:var(--gold)">Now — Weeks 1–4</div><div class="d-sp-title">Azelaic acid + current routine</div><div class="d-sp-desc">First PIH fading begins. Active pimples should start reducing. Consistency is everything.</div></div>
+<div class="d-sphase" style="border-left-color:var(--coral)"><div class="d-sp-period" style="color:var(--coral)">Weeks 4–10</div><div class="d-sp-title">SPF + AM moisturizer added</div><div class="d-sp-desc">PIH fading accelerates significantly once UV is blocked. Skin texture smoothing. Tretinoin at full effect.</div></div>
+<div class="d-sphase" style="border-left-color:var(--sage)"><div class="d-sp-period" style="color:var(--sage)">Months 3–4</div><div class="d-sp-title">Compounding results</div><div class="d-sp-desc">Skin significantly clearer. PIH visibly fading. Facial definition improving as body recomp progresses.</div></div>
+<div class="d-sphase" style="border-left-color:var(--blue)"><div class="d-sp-period" style="color:var(--blue)">Months 5–6</div><div class="d-sp-title">Full compounding phase</div><div class="d-sp-desc">All systems reinforcing: sleep → skin → energy → workouts → body composition → facial definition.</div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Hair Routine</div>
+<div class="d-step"><div class="d-step-tag">①</div><div><div class="d-step-title">Sulfate-free shampoo — 2–3x/week max</div><div class="d-step-desc">OUAI, Olaplex No.4. Scalp only. Less washing = more moisture retained.</div></div></div>
+<div class="d-step"><div class="d-step-tag">②</div><div><div class="d-step-title">Protein + moisture conditioner — every wash</div><div class="d-step-desc">Olaplex No.5 or Redken All Soft. Mid-length to ends, 3–5 min. More important than shampoo.</div></div></div>
+<div class="d-step"><div class="d-step-tag">③</div><div><div class="d-step-title">Weekly deep mask — 1x/week</div><div class="d-step-desc">Olaplex No.3 or DIY: egg yolk + coconut oil + honey + argan oil. 20–30 min under shower cap.</div></div></div>
+<div class="d-step"><div class="d-step-tag">④</div><div><div class="d-step-title">Leave-in + heat protectant — every wash</div><div class="d-step-desc">Olaplex No.6. Always heat protectant before any heat tool — thermal damage is irreversible.</div></div></div>
+</div>`
+},
+
+health:{
+eye:'Health',
+title:'Neurochemical Optimization',
+html:`
+<div class="d-callout coral"><strong>Bupropion switch — monitor until April 3.</strong> Switched CVS → Duane Reade ~March 19. Different generic = different ER matrix = different absorption. Fatigue + brain fog = consistent with this. If still symptomatic April 3: contact prescriber, request brand-name Wellbutrin XL or original manufacturer.</div>
+<div class="d-callout coral"><strong>Bloodwork is the most important immediate next step.</strong> Facial hollowing + fatigue + cognitive cluster at 23 may share one root cause. Thyroid dysfunction drives all three simultaneously and is frequently missed in young women.</div>
+<div class="d-sec"><div class="d-sec-lbl">Bloodwork — Request All of These</div>
+<div class="d2">
+<div class="d-card"><div class="d-ct">Priority panel</div><div class="d-cb"><strong>Thyroid:</strong> TSH + Free T3 + Free T4<br><strong>CBC</strong> — complete blood count<br><strong>CMP</strong> — metabolic panel<br><strong>Vitamin D</strong> — 25-OH<br><strong>Vitamin B12</strong><br><strong>Ferritin</strong> — iron stores</div></div>
+<div class="d-card"><div class="d-ct">How to book</div><div class="d-cb"><strong>Fastest:</strong> ZocDoc → J&J insurance → PCP this week.<br><br><strong>Alt:</strong> Quest Diagnostics or LabCorp direct.<br><br>Wait for results before adding supplements. Test, don't guess.</div></div>
+</div></div>
+<div class="d-sec"><div class="d-sec-lbl">Behavioral Interventions — Priority Order</div>
+<div class="d-callout"><strong>Why:</strong> ADHD = dopamine + norepinephrine underactivity. Bupropion addresses both. These interventions compound the medication by improving receptor sensitivity.</div>
+<div class="d-hrow"><div class="d-hdot" style="background:var(--sage)"></div>① Sleep consistency — 6:30am wake, 10:30pm lights out <strong style="color:var(--sage);margin-left:auto">✓ In calendar</strong></div>
+<div class="d-hrow"><div class="d-hdot" style="background:var(--sage)"></div>② Aerobic exercise 3–4x/week <strong style="color:var(--sage);margin-left:auto">✓ In calendar</strong></div>
+<div class="d-hrow"><div class="d-hdot" style="background:var(--shadow-dark)"></div>③ Morning sunlight within 30 min of waking</div>
+<div class="d-hrow"><div class="d-hdot" style="background:var(--shadow-dark)"></div>④ No phone first 30–60 min + before bed</div>
+<div class="d-hrow"><div class="d-hdot" style="background:var(--shadow-dark)"></div>⑤ Cold exposure — end showers cold 30–60 sec (NE spike 200–300%)</div>
+<div class="d-hrow"><div class="d-hdot" style="background:var(--shadow-dark)"></div>⑥ High protein 100–115g/day — tyrosine + phenylalanine → dopamine</div>
+<div class="d-hrow"><div class="d-hdot" style="background:var(--shadow-dark)"></div>⑦ Meditation 10 min daily — currently Sunday only, expand to WFH mornings</div>
+<div class="d-hrow"><div class="d-hdot" style="background:var(--shadow-dark)"></div>⑧ Social media batching — one 20-min window in evening only</div>
+</div>`
+},
+
+personal:{
+eye:'Personal & Creative',
+title:'Gelato, Chess & More',
+html:`
+<div class="d-sec"><div class="d-sec-lbl">Gelato Brand</div>
+<div class="d-card"><div class="d-ct">The vision</div><div class="d-cb">Science-based functional gelato — real ingredients, real purpose. Your biomedical background is the differentiator. Nobody making gelato can explain <em>why</em> it works the way you can.<br><br><strong>Current recipe:</strong> Sleepy Time — chamomile, tart cherry, magnesium, banana, Medjool dates, Fairlife milk base. Saturday Gelato Lab 12pm–3pm already in calendar.</div></div>
+<div class="d2">
+<div class="d-card"><div class="d-ct">Recipe goals</div><div class="d-cb">Perfect sleepy time base → 2–3 additional functional flavors → test with friends → photograph every batch.</div><div class="d-na"><strong>Next:</strong> Document ratios + texture + sleep effect each batch</div></div>
+<div class="d-card"><div class="d-ct">Brand goals</div><div class="d-cb">Name + visual identity → Instagram for process → Pinterest for aesthetic/recipe pins → Etsy or farmers market first.</div></div>
+</div></div>
+<div class="d-sec"><div class="d-sec-lbl">Active Hobbies</div>
+<div class="d-step"><div class="d-step-tag">♟</div><div><div class="d-step-title">Chess — already in shuttle routine</div><div class="d-step-desc">10 min commute home Tue/Wed/Thu. Chess.com puzzles mode — more efficient than full games for short windows. Target: 800–1000 Elo.</div></div></div>
+<div class="d-step"><div class="d-step-tag">🇫🇷</div><div><div class="d-step-title">French — already in shuttle routine</div><div class="d-step-desc">10 min commute home Tue/Wed/Thu. Duolingo for consistency + Coffee Break French podcast on longer commutes. Goal: conversational by Germany trip.</div></div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Planned Purchases</div>
+<div class="d-card"><div class="d-ct">🎹 Piano — weighted keyboard</div><div class="d-cb"><strong>Yamaha P-45 (~$500)</strong> or Roland FP-30X (~$700). Weighted 88-key — don't buy a mini keyboard, you'll outgrow it in a week. Plant room or bedroom for practice. 15–20 min 3x/week rebuilds muscle memory fast.</div><div class="d-na"><strong>When you buy it:</strong> Add Sunday afternoon practice block to calendar</div></div>
+<div class="d-card"><div class="d-ct">📷 Camera — mirrorless</div><div class="d-cb"><strong>Fujifilm X-T30 II (~$800)</strong> — best film simulations for Pinterest aesthetic. Food/lifestyle content looks incredible. Sony ZV-E10 (~$600) is the budget alternative. Syncs directly with gelato brand content.</div><div class="d-na"><strong>When you buy it:</strong> Shoot every gelato batch. Pinterest + Instagram content flywheel starts here.</div></div>
+</div>
+<div class="d-sec"><div class="d-sec-lbl">Pinterest Recovery — 63K → 1K</div>
+<div class="d-callout coral"><strong>This is a distribution drop, not a content quality drop.</strong> Pinterest algorithm changed 2023–2024 — accounts not posting fresh original content got suppressed hard. Very recoverable in 60–90 days.</div>
+<div class="d-step"><div class="d-step-tag">①</div><div><div class="d-step-title">Audit which boards drove the 63K</div><div class="d-step-desc">Reactivate those exact boards with fresh pins first — don't start new ones yet.</div></div></div>
+<div class="d-step"><div class="d-step-tag">②</div><div><div class="d-step-title">Camera purchase → original content</div><div class="d-step-desc">Pinterest now heavily rewards original images over repins. Your gelato photos become your content engine.</div></div></div>
+<div class="d-step"><div class="d-step-tag">③</div><div><div class="d-step-title">5–10 pins/week, mix original + curated</div><div class="d-step-desc">Connect gelato brand aesthetic to your existing Pinterest niche. Consistent posting for 60–90 days → algorithm rediscovers you.</div></div></div>
+</div>`
+}
+
+
+,mealprep:{
+eye:'Meal Prep System',
+title:'Grab-and-Go Week',
+html:`
+<div class="d-callout"><strong>The rule:</strong> Everything portioned as a complete single serving on Sunday. Open fridge, grab it, eat it — zero decisions at meal time. This is not about cooking more, it's about removing initiation friction entirely.</div>
+
+<div class="d-sec"><div class="d-sec-lbl">Breakfasts — Round Tupperware, 5 jars</div>
+<div class="d-step"><div class="d-step-tag">A×3</div><div>
+  <div class="d-step-title">Chia Pudding Jars</div>
+  <div class="d-step-desc">3 tbsp chia seeds + 1 cup Fairlife milk + 1 tsp honey + pinch of cardamom. Shake in jar Sunday, fridge overnight.<br><strong>Top Sunday morning:</strong> sliced mango or strawberries + 1 tbsp ground flaxseed + few dark chocolate chips.<br><strong>~18g protein · flaxseed = omega-3 for hair + skin barrier</strong></div>
+</div></div>
+<div class="d-step"><div class="d-step-tag">B×2</div><div>
+  <div class="d-step-title">Yogurt Cups</div>
+  <div class="d-step-desc">Portion full-fat Greek yogurt (Chobani or Fage 2%) into round containers. Top with honey + pomegranate seeds or sliced fig + 1 tbsp ground flaxseed + crushed pistachios. Sealed and ready.<br><strong>~17g protein · pomegranate = collagen + skin antioxidants</strong></div>
+</div></div>
+</div>
+
+<div class="d-sec"><div class="d-sec-lbl">Lunches — 5 Rectangular Containers</div>
+<div class="d-card"><div class="d-status sa">This week's bowl</div>
+<div class="d-ct">Persian Chicken + Farro Bowl</div>
+<div class="d-cb">
+  <strong>Grain base:</strong> 1.5 cups dry farro → ~4.5 cups cooked. Season with olive oil, lemon, salt.<br>
+  <strong>Protein:</strong> Roast 4–5 chicken thighs with za'atar, cumin, garlic, olive oil, lemon zest at 425°F · 35 min. Slice, portion evenly.<br>
+  <strong>Beauty veg:</strong> Roast cherry tomatoes (halved + olive oil + salt) on the same pan. Lycopene absorption increases when cooked with fat.<br>
+  <strong>Sauce:</strong> 3 tbsp tahini + juice of 1 lemon + 1 garlic clove + water to thin + pinch of cumin. Big batch, drizzle over each container.<br>
+  <strong>Greens:</strong> Add arugula or spinach fresh at meal time — put a bag in the fridge and grab a handful.<br><br>
+  <strong>~38g protein per serving · tomatoes + olive oil = maximum lycopene</strong>
+</div>
+<div class="d-na"><strong>Optional add-on:</strong> Roast a can of chickpeas (olive oil + cumin + paprika, same oven) and portion on top. Adds zinc for skin.</div>
+</div></div>
+
+<div class="d-sec"><div class="d-sec-lbl">Dinners — 5 Rectangular Containers</div>
+<div class="d-step"><div class="d-step-tag">×3</div><div>
+  <div class="d-step-title">Spiced Lamb over Rice with Cucumber Salad</div>
+  <div class="d-step-desc">Brown 500g ground lamb with onion, garlic, cumin, coriander, cinnamon, smoked paprika, salt.<br>Portion over basmati rice. Quick cucumber salad: diced cucumber + cherry tomatoes + red onion + fresh mint + olive oil + lemon — store dressing in a small jar separately so it stays crisp.<br>Dollop of plain Greek yogurt on top of each container.<br><strong>~35g protein per serving</strong></div>
+</div></div>
+<div class="d-step"><div class="d-step-tag">×2</div><div>
+  <div class="d-step-title">Sesame Ginger Salmon Bowl</div>
+  <div class="d-step-desc">Mix canned salmon with sesame oil, soy sauce, rice vinegar, fresh ginger, scallions, sesame seeds.<br>Portion over rice. Top with shredded carrots + cucumber ribbons + 1 tsp ground flaxseed. Sauce jar: soy + sesame oil + honey + ginger.<br><strong>~32g protein · salmon + flaxseed = best combo for hair + skin barrier</strong></div>
+</div></div>
+</div>
+
+<div class="d-sec"><div class="d-sec-lbl">Snacks — Prep Sunday, Grab All Week</div>
+<div class="d-card"><div class="d-cb">
+  <strong>Hard boiled eggs:</strong> Make 8, peel all of them Sunday, store in one container with salt nearby. 2 eggs = 12g protein.<br><br>
+  <strong>Why this matters:</strong> Breakfast ~18g + Lunch ~38g + Dinner ~33g + 2 eggs ~12g = <strong>~101g protein/day on autopilot.</strong> You hit your target without tracking anything.
+</div></div>
+</div>
+
+<div class="d-sec"><div class="d-sec-lbl">Beauty Foods — Weekly Checklist</div>
+<div class="d2">
+<div class="d-card"><div class="d-ct">Daily in your plan ✓</div><div class="d-cb">🍅 Cooked tomatoes + olive oil (lunch)<br>🌱 Ground flaxseed (breakfast every day)<br>🥚 Eggs (snack batch)<br>🫒 Olive oil (lunch + dinner)<br>🐟 Salmon (2 dinners)</div></div>
+<div class="d-card"><div class="d-ct">Skin + hair targets</div><div class="d-cb">Lycopene → skin protection<br>Omega-3 → hair barrier + shine<br>Biotin → keratin production<br>Zinc (chickpeas) → acne + hair<br>Vitamin E (olive oil) → skin repair</div></div>
+</div></div>
+
+<div class="d-sec"><div class="d-sec-lbl">Sunday Cook Order — 8:30–11:30am</div>
+<div class="d-step"><div class="d-step-tag">8:30</div><div><div class="d-step-title">Start everything long-cook</div><div class="d-step-desc">Farro in pot with salted water. Eggs in pot covered with cold water. Oven to 425°F.</div></div></div>
+<div class="d-step"><div class="d-step-tag">8:45</div><div><div class="d-step-title">Oven tray in</div><div class="d-step-desc">Season chicken thighs + cherry tomatoes + optional chickpeas on sheet pan → oven for 35 min.</div></div></div>
+<div class="d-step"><div class="d-step-tag">9:00</div><div><div class="d-step-title">Stovetop: lamb + rice</div><div class="d-step-desc">Brown ground lamb with spices. Start basmati rice in second pot. Make tahini sauce + sesame sauce in small jars while things cook.</div></div></div>
+<div class="d-step"><div class="d-step-tag">9:30</div><div><div class="d-step-title">Eggs done → peel all 8. Farro done → season.</div><div class="d-step-desc">Cool eggs in ice water 5 min, then peel immediately while still slightly warm — easier than cold. Store in one container.</div></div></div>
+<div class="d-step"><div class="d-step-tag">9:45</div><div><div class="d-step-title">Chicken + tomatoes out of oven → slice chicken</div><div class="d-step-desc">Let rest 5 min before slicing. Tomatoes go directly into lunch containers.</div></div></div>
+<div class="d-step"><div class="d-step-tag">10:00</div><div><div class="d-step-title">Assemble all containers</div><div class="d-step-desc">5 lunch containers: farro → chicken → tomatoes → tahini drizzle. 5 dinner containers: 3× lamb rice, 2× salmon bowl. 5 breakfast jars: 3× chia, 2× yogurt cup.</div></div></div>
+<div class="d-step"><div class="d-step-tag">10:45</div><div><div class="d-step-title">Fridge organized</div><div class="d-step-desc">Lunches one shelf. Dinners one shelf. Breakfasts one shelf. Sauce jars on door. Everything labeled with a sticky if helpful. Open fridge = immediately grab what you need.</div></div></div>
+<div class="d-step"><div class="d-step-tag">11:00</div><div><div class="d-step-title">Switch laundry → kitchen clean</div><div class="d-step-desc">Done by 11:30. Kitchen reset before Gelato Lab starts at 12.</div></div></div>
+</div>
+
+<div class="d-sec"><div class="d-sec-lbl">Grocery List — Order Saturday 3:30pm</div>
+<div class="d2">
+<div class="d-card"><div class="d-ct">Proteins</div><div class="d-cb">4–5 chicken thighs<br>500g ground lamb<br>2× canned salmon<br>1 doz eggs<br>Greek yogurt (large tub)<br>Fairlife whole milk</div></div>
+<div class="d-card"><div class="d-ct">Grains + Pantry</div><div class="d-cb">Farro (1 bag)<br>Basmati rice<br>Chia seeds<br>Ground flaxseed<br>Tahini<br>Soy sauce + sesame oil<br>Olive oil (if low)</div></div>
+<div class="d-card"><div class="d-ct">Produce</div><div class="d-cb">Cherry tomatoes (2 pints)<br>Cucumber (2)<br>Arugula or spinach bag<br>Lemons (4–5)<br>Red onion<br>Fresh mint<br>Scallions<br>Carrots (shredded bag)</div></div>
+<div class="d-card"><div class="d-ct">Breakfast toppings</div><div class="d-cb">Mango or strawberries<br>Pomegranate seeds<br>Pistachios<br>Dark chocolate chips<br>Honey<br>Figs (optional)</div></div>
+</div></div>
+`}
+
+,progress:{
+eye:'Habit Progress',
+title:'Streaks & Monthly View',
+html:`<div id="progress-content"><div style="text-align:center;padding:40px 0;font-size:12px;color:var(--text-dim);font-weight:600;">Loading your data...</div></div>`,
+}
+}; // end DRAWERS
+</script>
+</body>
+</html>
